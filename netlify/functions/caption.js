@@ -1,8 +1,7 @@
 // Instagram caption for the walker's photo, written by Gemma 4 through the
 // Gemini API (free tier). Key stays server-side.
-// The free tier's content may be used to improve Google's products, so by
-// default only text is sent (place, area, place type); the photo itself is sent
-// only if the client includes `img`.
+// The app sends the photo (`img`, ≤1080px JPEG) with the place, area and type.
+// Free tier: inputs may be used to improve Google's products.
 // POST { place, area, kind?, hashtags[], img? } -> { caption }
 const MODEL = "gemma-4-26b-a4b-it";
 

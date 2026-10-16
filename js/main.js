@@ -278,8 +278,8 @@ async function onPhoto(e) {
   try {
     const r = await fetch("/api/caption", {
       method: "POST", headers: { "content-type": "application/json" },
-      // text only: the photo stays on the device (Gemma free tier may use inputs to improve Google products)
-      body: JSON.stringify({ place, area: CITY.area, kind: placeKind(place), hashtags: CITY.hashtags }),
+      // photo is sent to Gemma (free tier: Google may use inputs to improve its products)
+      body: JSON.stringify({ img: dataUrl, place, area: CITY.area, kind: placeKind(place), hashtags: CITY.hashtags }),
     });
     const j = await r.json();
     if (r.ok && j.caption && !ta.dataset.edited) ta.value = j.caption;
