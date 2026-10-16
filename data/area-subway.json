@@ -1,0 +1,102 @@
+{
+ "stations": [
+  {
+   "name": "Canal Street",
+   "en": "Canal Street",
+   "lines": [],
+   "lng": -73.999892,
+   "lat": 40.718092
+  },
+  {
+   "name": "Broadway–Lafayette Street",
+   "en": "Broadway–Lafayette Street",
+   "lines": [],
+   "lng": -73.996204,
+   "lat": 40.725297
+  },
+  {
+   "name": "East Broadway",
+   "en": "East Broadway",
+   "lines": [],
+   "lng": -73.990173,
+   "lat": 40.713715
+  },
+  {
+   "name": "Grand Street",
+   "en": "Grand Street",
+   "lines": [],
+   "lng": -73.9937839,
+   "lat": 40.7181616
+  },
+  {
+   "name": "Bowery",
+   "en": "Bowery",
+   "lines": [],
+   "lng": -73.99372,
+   "lat": 40.7202174
+  },
+  {
+   "name": "2nd Avenue",
+   "en": "2nd Avenue",
+   "lines": [],
+   "lng": -73.989938,
+   "lat": 40.723402
+  },
+  {
+   "name": "Essex Street",
+   "en": "Essex Street",
+   "lines": [],
+   "lng": -73.9874236,
+   "lat": 40.7183982
+  },
+  {
+   "name": "Prince Street",
+   "en": "Prince Street",
+   "lines": [],
+   "lng": -73.997702,
+   "lat": 40.724329
+  },
+  {
+   "name": "Bleecker Street",
+   "en": "Bleecker Street",
+   "lines": [],
+   "lng": -73.9946797,
+   "lat": 40.7259471
+  },
+  {
+   "name": "Spring Street",
+   "en": "Spring Street",
+   "lines": [],
+   "lng": -73.9971855,
+   "lat": 40.7223025
+  },
+  {
+   "name": "Canal Street",
+   "en": "Canal Street",
+   "lines": [],
+   "lng": -74.0052989,
+   "lat": 40.7218493
+  },
+  {
+   "name": "Spring Street",
+   "en": "Spring Street",
+   "lines": [],
+   "lng": -74.0040137,
+   "lat": 40.7255399
+  },
+  {
+   "name": "Houston Street",
+   "en": "Houston Street",
+   "lines": [],
+   "lng": -74.0053077,
+   "lat": 40.7285993
+  },
+  {
+   "name": "Delancey Street",
+   "en": "Delancey Street",
+   "lines": [],
+   "lng": -73.9881811,
+   "lat": 40.718428
+  }
+ ]
+}

@@ -1,0 +1,18 @@
+[build]
+  # CI (GitHub-linked) builds: copy ONLY the app's static assets into the
+  # publish folder — repo docs/scripts/renders never reach the public site
+  command = "node scripts/build-site.mjs"
+  publish = ".netlify-publish"
+  functions = "netlify/functions"
+
+[dev]
+  publish = "."
+  functions = "netlify/functions"
+  port = 8888
+  targetPort = 0
+
+# /api/* → serverless functions (keeps API keys server-side)
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200

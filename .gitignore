@@ -1,0 +1,27 @@
+# secrets
+.env
+.env.*
+!.env.example
+
+# deps / build
+node_modules/
+.netlify/
+dist/
+
+# claude local settings
+.claude/settings.local.json
+
+# local dev scratch
+_shot.mjs
+*.png
+
+# os / editor
+.DS_Store
+Thumbs.db
+scratchpad_*
+
+.netlify-publish/
+shots/
+
+# Qloo responses must not be published (Qloo hackathon guide FAQ)
+data/qloo-cache/
