@@ -9,15 +9,9 @@ let gen = 0; // bumped by stop(): a narration still fetching when stop() ran mus
 let held = false; // pause() holds NEW clips too — multi-clip sequences must not talk through a pause
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
-// pre-baked clips (audio/manifest.json) — demo path plays without spending credits
-const hash = (s) => { let h = 5381; for (let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) >>> 0; return h.toString(36); };
-let baked = {};
-fetch("./audio/manifest.json").then((r) => (r.ok ? r.json() : {})).then((m) => { baked = m; }).catch(() => {});
-const bakedUrl = (text) => { const f = baked[hash(text)]; return f ? "./audio/" + f : null; };
-
 export async function playNarration(text, { voiceId } = {}) {
   const g = gen;
-  let url = cache.get(text) || bakedUrl(text);
+  let url = cache.get(text);
   if (!url) {
     try {
       const res = await fetch("/api/tts", {
@@ -49,7 +43,7 @@ export async function playNarration(text, { voiceId } = {}) {
 
 // Warm the cache in the background so the next stop starts instantly.
 export function prefetch(text, { voiceId } = {}) {
-  if (!text || cache.has(text) || bakedUrl(text)) return;
+  if (!text || cache.has(text)) return;
   fetch("/api/tts", {
     method: "POST",
     headers: { "content-type": "application/json" },

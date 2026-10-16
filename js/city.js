@@ -9,4 +9,5 @@ export const CITY = {
   // walks start at Spring Street station (Lafayette St), a block from Qloo's office
   start: { lng: -73.99719, lat: 40.7223, name: "Spring Street station" },
   maxFromCenterM: 1600,             // GPS "you're outside the area" threshold
+  hashtags: ["SoHo", "LowerEastSide", "NYC"],
 };

@@ -2,179 +2,83 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>TasteWalk — Walking Guide That Learns Your Taste</title>
-  <meta name="description" content="A walking audio guide that learns your taste as you walk: tap yes or no on each place and the route adapts, grounded in Qloo taste data." />
-  <meta property="og:type" content="website" />
-  <meta property="og:site_name" content="TasteWalk" />
-  <meta property="og:title" content="TasteWalk — Walking Guide That Learns Your Taste" />
-  <meta property="og:description" content="A walking audio guide that learns your taste as you walk: tap yes or no on each place and the route adapts, grounded in Qloo taste data." />
-  <meta property="og:image:width" content="1200" />
-  <meta property="og:image:height" content="630" />
-  <meta name="twitter:card" content="summary_large_image" />
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🗼</text></svg>" />
+  <meta name="description" content="A walking guide that learns your taste as you walk: tap yes or no on each place, snap a photo and post it straight to Instagram." />
+  <meta name="theme-color" content="#f6f1e7" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👟</text></svg>" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" />
-  <link rel="stylesheet" href="./css/style.css" />
-  <!-- scrapbook fonts for the trip album (falls back to serif/monospace offline) -->
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,700;1,400&family=Space+Mono&display=swap" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Inter:wght@400;500;600&display=swap" />
+  <link rel="stylesheet" href="./css/style.css" />
 </head>
 <body>
-  <!-- 2D map (Leaflet) mounts here -->
   <div id="map"></div>
 
-  <!-- Top bar -->
-  <div class="topbar">
-    <button class="home-btn" id="homeBtn" title="Back to start">🏠</button>
-    <div>
-      <div class="brand">TasteWalk<span class="dot">.</span></div>
-      <div class="sub">GPS walking audio guide · New York</div>
-    </div>
-  </div>
-
-  <!-- Mode toggle -->
-  <div class="mode-toggle" id="modeToggle">
-    <button data-mode="sim" class="active">▶ Simulation</button>
-    <button data-mode="gps">📍 Live GPS</button>
-  </div>
-
-  <!-- Real-time local clock + weather -->
-  <div class="env-chip" id="envChip">🕐 —</div>
-
-  <!-- Game HUD (top-center) -->
-  <div class="hud" id="hud">
-    <div class="hud-top">
-      <span class="hud-star">⭐</span>
-      <span class="hud-count" id="hudCount">0 / 50</span>
-      <div class="hud-bar"><div class="hud-fill" id="hudFill"></div></div>
-    </div>
-    <div class="hud-now" id="hudNow" hidden><span class="np-dot"></span><span id="hudNowText">—</span></div>
-  </div>
-
-  <!-- Discovery popup -->
-  <div class="discovery" id="discovery">
-    <div class="disc-badge">+1 ⭐ DISCOVERED</div>
-    <div class="disc-name" id="discName">—</div>
-    <div class="disc-ko" id="discKo">—</div>
-    <div class="disc-sub">Spot discovered!</div>
-  </div>
-
-  <!-- Spot info card -->
-  <div class="spot-card" id="spotCard">
-    <button class="spot-close" id="spotClose" title="Close">✕</button>
-    <button class="spot-min" id="spotMin" title="Minimize">ⓘ Minimize</button>
-    <img class="spot-photo" id="spotPhoto" alt="" hidden />
-    <div class="spot-body">
-      <div class="idx"><span class="badge" id="spotType">FOOD</span><span id="spotIdx">3 / 50</span></div>
-      <h2 id="spotName">—</h2>
-      <div class="ko" id="spotKo">—</div>
-      <p id="spotBlurb">—</p>
-      <div class="tip" id="spotTip" style="display:none"></div>
-      <div class="addr-row" id="spotAddrRow">
-        <div class="addr-txt">
-          <div class="addr-label">ADDRESS — show this to a taxi driver</div>
-          <div class="addr-ko" id="spotAddr">—</div>
-        </div>
-        <button class="addr-copy" id="spotCopy" title="Copy address">📋</button>
+  <header class="top">
+    <div class="brand">TasteWalk</div>
+    <div class="top-right">
+      <span class="chip" id="envChip">—</span>
+      <div class="mode" id="modeToggle" role="tablist">
+        <button data-mode="sim" class="on" title="Simulated walk">Demo</button>
+        <button data-mode="gps" title="Use your real location">GPS</button>
       </div>
-      <div class="spot-actions">
-        <button class="spot-video" id="spotVideo">▶ Preview</button>
-        <a class="spot-gmap" id="spotGmap" target="_blank" rel="noopener">🗺️ Google Maps</a>
+    </div>
+  </header>
+
+  <button class="recenter" id="recenterBtn" title="Follow me" hidden>◎</button>
+
+  <section class="sheet" id="sheet">
+    <div class="grip"></div>
+
+    <!-- 1. choose a walk -->
+    <div class="view" id="viewPick">
+      <p class="kicker" id="areaName"></p>
+      <h1>Pick a walk</h1>
+      <div class="courses" id="courses"></div>
+    </div>
+
+    <!-- 2. walking -->
+    <div class="view" id="viewWalk" hidden>
+      <p class="kicker"><span id="stopIdx"></span> · <span id="stopMeta"></span></p>
+      <h2 id="stopName"></h2>
+      <p class="blurb" id="stopBlurb"></p>
+      <p class="why" id="stopWhy" hidden></p>
+      <div class="actions">
+        <button class="act no" id="noBtn" title="Not for me">✕</button>
+        <button class="act cam" id="camBtn" title="Snap &amp; post">📷</button>
+        <button class="act yes" id="yesBtn" title="I like this">○</button>
+      </div>
+      <div class="controls">
+        <button class="link" id="pauseBtn">Pause</button>
+        <button class="link" id="endBtn">End walk</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- snap & post -->
+  <div class="modal" id="post" hidden>
+    <div class="post-card">
+      <img id="postImg" alt="Your photo" />
+      <label class="post-label" for="postText">Caption</label>
+      <textarea id="postText" rows="5"></textarea>
+      <p class="hint" id="postHint"></p>
+      <button class="primary" id="shareBtn">Share to Instagram</button>
+      <div class="row">
+        <button class="link" id="copyBtn">Copy caption</button>
+        <button class="link" id="saveBtn">Save photo</button>
+        <button class="link" id="postClose">Close</button>
       </div>
     </div>
   </div>
 
-  <!-- swiped-away spot card tucks into this chip (mobile) -->
-  <button class="card-mini" id="cardMini" title="Show spot info">ℹ️</button>
-
-  <!-- Right sidebar: browsable list of the current course -->
-  <aside class="side" id="sidebar">
-    <div class="side-head">
-      <button class="side-fold" id="sideFold" title="Hide list">›</button>
-      <span id="sideTitle">⭐ Must See</span>
-      <span class="side-count" id="sideCount">0</span>
-    </div>
-    <div class="side-list" id="sideList"></div>
-  </aside>
-
-  <!-- Themed course picker -->
-  <div class="course-bar" id="courseBar"></div>
-
-  <!-- mobile-only toggles: course picker + sidebar, so nothing overlaps the dock -->
-  <div class="mob-chips" id="mobChips">
-    <button id="mobCourse">⭐ Course</button>
-    <button id="mobList">📋 Spots</button>
-  </div>
-
-  <!-- Bottom control dock -->
-  <div class="dock" id="dock">
-    <button class="btn primary" id="startBtn" disabled>▶ Start Walk</button>
-    <button class="btn ghost" id="pauseBtn" disabled>Pause</button>
-    <button class="btn ghost" id="prevBtn" disabled title="Replay what the guide just said">‹ Prev</button>
-    <button class="btn ghost" id="skipBtn" disabled>Next ›</button>
-    <button class="btn ghost" id="snapBtn" title="Snap a photo — tagged to where you are right now">📷</button>
-    <button class="btn ghost" id="resetBtn" title="Reset everything">↺</button>
-  </div>
-
-  <!-- shows while peeking at a list spot mid-walk -->
-  <button class="peek-back hidden" id="peekBackBtn">🚶 Resume journey</button>
-
-  <!-- stamp-rally camera (phones open the camera app directly) -->
-  <input type="file" id="camInput" accept="image/*" capture="environment" hidden>
-
-  <!-- trip album — Gemini writes your day, ElevenLabs tells it over your photos.
-       Styled like the printed scrapbook of the trip-shorts video: paper, taped
-       photo prints, mono labels, serif story lines. -->
-  <div class="album" id="album" hidden>
-    <button class="album-close" id="albumClose">✕</button>
-    <div class="album-grain"></div>
-    <div class="album-stage">
-      <div class="album-kick" id="albumKick"></div>
-      <div class="album-print tilt-l" id="albumPrint">
-        <div class="album-tape"></div>
-        <div class="album-win"><img id="albumImg" alt=""></div>
-        <div class="album-meta" id="albumMeta"></div>
-        <div class="album-page" id="albumPage"></div>
-      </div>
-      <div class="album-cap" id="albumCap"></div>
-    </div>
-    <div class="album-title" id="albumTitle"></div>
-  </div>
-
-  <!-- Video preview modal -->
-  <div class="video-modal" id="videoModal">
-    <div class="video-box">
-      <div class="video-head">
-        <span id="videoTitle">—</span>
-        <button id="videoClose">✕</button>
-      </div>
-      <div class="video-wrap"><iframe id="videoFrame" src="" title="Preview video"
-        allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe></div>
-    </div>
-  </div>
-
-  <!-- Toast (GPS status / hints) -->
+  <input type="file" id="camInput" accept="image/*" capture="environment" hidden />
   <div class="toast" id="toast"></div>
 
-  <!-- Loading / error overlay -->
   <div class="overlay" id="overlay">
-    <div class="spinner" id="spinner"></div>
-    <div class="title" id="overlayTitle">Loading the map…</div>
-    <div class="msg" id="overlayMsg">Fetching streets and places.</div>
-    <div class="eta" id="overlayEta"></div>
+    <div class="brand">TasteWalk</div>
+    <p id="overlayMsg">Loading the map…</p>
   </div>
-  <script>
-    // countdown so the wait feels finite — stops once boot hides the overlay
-    (() => {
-      const eta = document.getElementById("overlayEta");
-      let s = 6;
-      const iv = setInterval(() => {
-        if (document.getElementById("overlay").classList.contains("hidden")) return clearInterval(iv);
-        eta.textContent = s > 0 ? `Ready in ~${s--}s` : "Almost there…";
-      }, 1000);
-      eta.textContent = `Ready in ~${s--}s`;
-    })();
-  </script>
 
   <script type="importmap">
   {
