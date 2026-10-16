@@ -50,8 +50,10 @@ function saveFeedback() {
 
 // ---------- courses ----------
 function pickStops(course) {
+  // nearest first, but a place without a description counts as 400 m farther,
+  // so walks favour stops the guide can actually tell you about
   const near = state.pois.filter(course.pick)
-    .map((p) => ({ p, d: metersBetween([p.lng, p.lat], [CITY.start.lng, CITY.start.lat], p.lat) }))
+    .map((p) => ({ p, d: metersBetween([p.lng, p.lat], [CITY.start.lng, CITY.start.lat], p.lat) + (p.about ? 0 : 400) }))
     .sort((a, b) => a.d - b.d).map((x) => x.p);
   if (!course.mix) return near.slice(0, course.n);
   // round-robin over place types so "Classic" isn't all restaurants
@@ -91,7 +93,7 @@ function startCourse(plan) {
   Object.assign(state, { course: plan.course, stops: plan.stops, path: plan.path, cum: plan.cum, len: plan.len, i: 0, dist: 0, atStop: false, running: true, paused: false });
   state.pos = [CITY.start.lng, CITY.start.lat];
   setRoute(plan.path);
-  setStops(plan.stops);
+  setStops(plan.stops, peek);
   fitStops(CITY.start);
   recenter();
   show("viewPick", false); show("viewWalk"); show("recenterBtn");
@@ -102,21 +104,45 @@ function startCourse(plan) {
 }
 
 function current() { return state.stops[state.i]; }
+const shown = () => state.peek || current();      // the place on the sheet right now
+const sentences = (t, n) => (t.match(/[^.!?]+[.!?]+(\s|$)/g) || [t]).slice(0, n).join("").trim();
 
+// fill the sheet with one place: photo, name, description + its source
+function renderPlace(p, kicker) {
+  el("stopIdx").textContent = kicker;
+  el("stopName").textContent = nameOf(p);
+  const img = el("stopImg");
+  if (p.image) { img.src = p.image; img.hidden = false; } else { img.hidden = true; img.removeAttribute("src"); }
+  const facts = [p.menu && `Serves ${p.menu}.`, p.hours && `Hours: ${p.hours}`].filter(Boolean).join(" ");
+  el("stopBlurb").textContent = p.about ? sentences(p.about, 3) : facts;
+  const src = el("stopSrc");
+  if (p.about && p.aboutUrl) {
+    src.innerHTML = `${facts ? facts + " · " : ""}From <a href="${p.aboutUrl}" target="_blank" rel="noopener">${p.aboutSource}</a>`;
+    src.hidden = false;
+  } else src.hidden = true;
+  updateDistance();
+}
 function showStop() {
   const p = current();
   if (!p) return;
+  state.peek = null; show("backBtn", false);
   markStop(p.id, "next");
-  el("stopIdx").textContent = `${state.atStop ? "Stop" : "Next"} ${state.i + 1} of ${state.stops.length}`;
-  el("stopName").textContent = nameOf(p);
-  el("stopBlurb").textContent = [p.menu && `Serves ${p.menu}.`, p.hours && `Hours: ${p.hours}`].filter(Boolean).join(" ");
-  updateDistance();
+  renderPlace(p, `${state.atStop ? "Stop" : "Next"} ${state.i + 1} of ${state.stops.length}`);
+}
+// tap a stop on the map → read about it without leaving the walk
+function peek(id) {
+  const k = state.stops.findIndex((s) => s.id === id);
+  if (k < 0) return;
+  if (k === state.i) return showStop();
+  state.peek = state.stops[k];
+  show("backBtn");
+  renderPlace(state.peek, `Stop ${k + 1} of ${state.stops.length}`);
 }
 function updateDistance() {
-  const p = current();
+  const p = shown();
   if (!p || !state.pos) return;
   const label = TYPE_LABEL[p.type] || "Place";
-  el("stopMeta").textContent = state.atStop ? `${label} · you're here`
+  el("stopMeta").textContent = !state.peek && state.atStop ? `${label} · you're here`
     : `${label} · ${fmtDist(metersBetween(state.pos, [p.lng, p.lat], p.lat))}`;
 }
 
@@ -125,18 +151,19 @@ function arrive() {
   state.atStop = true;
   state.lastStop = p;
   showStop();
-  const extra = p.menu ? ` They serve ${p.menu}.` : "";
-  playNarration(`${nameOf(p)}.${extra} Do you like it? Tap the circle for yes, the cross for no.`);
+  const about = p.about ? ` ${sentences(p.about, 2)}` : (p.menu ? ` They serve ${p.menu}.` : "");
+  playNarration(`${nameOf(p)}.${about} Do you like it? Tap the circle for yes, the cross for no.`);
 }
 
-// ✕ / ○ — record taste for the stop on screen, then move on
+// ✕ / ○ — record taste for the place on the sheet; at the current stop, move on
 function judge(liked) {
-  const p = current();
+  const p = shown();
   if (!p) return;
   state.feedback[p.id] = liked ? 1 : 0;
   saveFeedback();
   markStop(p.id, liked ? "liked" : "skipped");
   toast(liked ? `○ Saved — more like ${nameOf(p)}` : "✕ Noted — we'll show you less like this");
+  if (state.peek) return showStop();
   advance();
 }
 function advance() {
@@ -311,6 +338,7 @@ function wire() {
     state.paused ? audioPause() : audioResume();
   });
   el("endBtn").addEventListener("click", finish);
+  el("backBtn").addEventListener("click", showStop);
   el("recenterBtn").addEventListener("click", () => { recenter(); if (state.pos) follow(state.pos[0], state.pos[1]); });
   document.querySelectorAll("#modeToggle button").forEach((b) => b.addEventListener("click", () => setMode(b.dataset.mode)));
   el("postText").addEventListener("input", (e) => { e.target.dataset.edited = "1"; });

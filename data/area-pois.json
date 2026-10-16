@@ -20,7 +20,13 @@
    "hours": "Mo-Th 12:00-22:00; Fr-Sa 12:00-24:00; Su 12:00-22:00",
    "menu": "pizza",
    "website": "https://www.firstpizza.com/",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "Q564293",
+   "wikipedia": "en:Lombardi's Pizza",
+   "about": "Lombardi's is a pizzeria at 32 Spring Street on the corner of Mott Street in the Nolita neighborhood of Manhattan in New York City. Opened in 1905, it has been recognized by the Pizza Hall of Fame as the first pizzeria in the United States, though later research has shown other pizzerias that predate it by more than a decade.",
+   "aboutUrl": "https://en.wikipedia.org/wiki/Lombardi's_Pizza",
+   "aboutSource": "Wikipedia",
+   "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/82/Lombardi%27s_Pizza.jpg/330px-Lombardi%27s_Pizza.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail"
   },
   {
    "id": "osm-n1915398676",
@@ -33,7 +39,13 @@
    "hours": "Mo-Th 08:00-22:15; Fr 08:00-24:00; Sa 00:00-24:00; Su 00:00-22:15",
    "menu": "deli",
    "website": "https://www.katzsdelicatessen.com",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "Q2611788",
+   "wikipedia": "en:Katz's Delicatessen",
+   "about": "Katz's Delicatessen, also known as Katz's of New York City, is a Jewish deli at 205 East Houston Street, on the southwest corner of Houston and Ludlow Streets on the Lower East Side of Manhattan in New York City. Although its menu is inspired by culturally Jewish foods, Katz's Delicatessen is not kosher.",
+   "aboutUrl": "https://en.wikipedia.org/wiki/Katz's_Delicatessen",
+   "aboutSource": "Wikipedia",
+   "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b2/Katz%27s_Delicatessen_%2851623899326%29.jpg/330px-Katz%27s_Delicatessen_%2851623899326%29.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail"
   },
   {
    "id": "osm-n2486570141",
@@ -46,7 +58,13 @@
    "hours": "Mo-Su 09:30-19:00",
    "menu": "",
    "website": "http://www.knishery.com",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "Q8054887",
+   "wikipedia": "en:Yonah Schimmel's Knish Bakery",
+   "about": "Yonah Schimmel's Knish Bakery is a bakery and restaurant, located at 137 East Houston Street, on the Lower East Side of Manhattan, that has been selling knishes since 1890. Its current location on Houston Street opened in 1910. It is certified CupK Kosher.",
+   "aboutUrl": "https://en.wikipedia.org/wiki/Yonah_Schimmel's_Knish_Bakery",
+   "aboutSource": "Wikipedia",
+   "image": "https://thumb.wikimedia.org/wikipedia/en/thumb/9/9a/Yonah_Schimmel_knishes.png/330px-Yonah_Schimmel_knishes.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail"
   },
   {
    "id": "osm-n2486570143",
@@ -59,7 +77,13 @@
    "hours": "Mo-Su 08:00-16:00",
    "menu": "",
    "website": "https://shop.russanddaughters.com/",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "Q7381088",
+   "wikipedia": "en:Russ & Daughters",
+   "about": "Russ & Daughters is an appetizing store that opened in 1914. It is located at 179 East Houston Street, on the Lower East Side of Manhattan, New York City. A family-operated store, it has been at the same location since 1920.",
+   "aboutUrl": "https://en.wikipedia.org/wiki/Russ_%26_Daughters",
+   "aboutSource": "Wikipedia",
+   "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/be/Russ_%26_Daughters_%2851624125108%29.jpg/330px-Russ_%26_Daughters_%2851624125108%29.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail"
   },
   {
    "id": "osm-n2550551548",
@@ -72,7 +96,13 @@
    "hours": "Mo, Fr, Sa 19:00-04:00; Tu-Th, Su 19:00-01:00",
    "menu": "",
    "website": "https://bitterend.com/",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "Q919751",
+   "wikipedia": "en:The Bitter End",
+   "about": "The Bitter End is a 230-person capacity nightclub, coffeehouse and folk music venue in New York City's Greenwich Village. It opened in 1961 at 147 Bleecker Street under the auspices of owner Fred Weintraub. The club changed its name to The Other End in June 1975. However, after a few years the owners changed the club's name back to the more recognizable The Bitter End. It remains open under new ownership.",
+   "aboutUrl": "https://en.wikipedia.org/wiki/The_Bitter_End",
+   "aboutSource": "Wikipedia",
+   "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a3/Beast_0114.jpg/330px-Beast_0114.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail"
   },
   {
    "id": "osm-n2567547059",
@@ -85,7 +115,13 @@
    "hours": "Mo-Fr 16:00-04:00; Sa, Su 14:00-04:00",
    "menu": "",
    "website": "https://arlenesgrocery.net/",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "Q4792130",
+   "wikipedia": "",
+   "about": "Arlene's Grocery is a bar and music venue located on the Lower East Side of Manhattan. It is located at 95 Stanton Street between Orchard St and Ludlow St. The venue was opened by Shane Doyle and two partners in 1995. Shane Doyle was also owner and founder of Sin-é. While Shane was bought out early on, the two remaining partners run the club.",
+   "aboutUrl": "https://en.wikipedia.org/wiki/Arlene's_Grocery",
+   "aboutSource": "Wikipedia",
+   "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/07/Up_loz_arlene.png/330px-Up_loz_arlene.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail"
   },
   {
    "id": "osm-n3233791134",
@@ -98,7 +134,13 @@
    "hours": "Mo-Th 10:00-23:00, Fr-Sa 10:00-24:00, Su 10:00-23:00",
    "menu": "coffee_shop",
    "website": "https://uncommonsnyc.com",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "Q20880821",
+   "wikipedia": "en:The Uncommons",
+   "about": "The Uncommons is a board game café in New York City established in 2013, located at 230 Thompson Street in Greenwich Village. It has claimed to be the first board game café in Manhattan, and the largest board game library on the East Coast.",
+   "aboutUrl": "https://en.wikipedia.org/wiki/The_Uncommons",
+   "aboutSource": "Wikipedia",
+   "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/17/Uncommons_Logo.jpg/330px-Uncommons_Logo.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail"
   },
   {
    "id": "osm-n4113144390",
@@ -111,7 +153,13 @@
    "hours": "Tu-Su 17:00-23:00",
    "menu": "",
    "website": "https://kgbbar.com/",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "Q6329544",
+   "wikipedia": "",
+   "about": "KGB is a Soviet era-themed bar located in the East Village of New York City.",
+   "aboutUrl": "https://en.wikipedia.org/wiki/KGB_(bar)",
+   "aboutSource": "Wikipedia",
+   "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7c/Jack_Womack_at_the_Shirley_Jackson_Award_Benefit%2C_KGB_bar%2C_New_York_City_-_20080723.jpg/330px-Jack_Womack_at_the_Shirley_Jackson_Award_Benefit%2C_KGB_bar%2C_New_York_City_-_20080723.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail"
   },
   {
    "id": "osm-n4146369290",
@@ -124,7 +172,13 @@
    "hours": "Mo-Th, Su 18:00-02:00; Fr, Sa 18:00-03:00",
    "menu": "",
    "website": "https://deathandcompany.com/",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "Q5247260",
+   "wikipedia": "",
+   "about": "Death and Company is a cocktail bar located in the East Village, Manhattan, New York, United States. Established in January 2007, the bar is owned by David Kaplan and Ravi DeRossi.",
+   "aboutUrl": "https://en.wikipedia.org/wiki/Death_%26_Co.",
+   "aboutSource": "Wikipedia",
+   "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/41/Death_and_Company_HDR_2022_jeh.jpg/330px-Death_and_Company_HDR_2022_jeh.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail"
   },
   {
    "id": "osm-n4284811306",
@@ -137,7 +191,13 @@
    "hours": "Th-Tu 11:00-21:00",
    "menu": "chinese",
    "website": "https://nomwah.com/",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "Q96396092",
+   "wikipedia": "en:Nom Wah Tea Parlor",
+   "about": "Nom Wah Tea Parlor, opened in 1920, is the oldest continuously running restaurant in the Chinatown of Manhattan in New York City. The restaurant serves Hong Kong style dim-sum and is currently located at 13 Doyers Street in Manhattan.",
+   "aboutUrl": "https://en.wikipedia.org/wiki/Nom_Wah_Tea_Parlor",
+   "aboutSource": "Wikipedia",
+   "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c4/Nom_Wah_Tea_Parlor_in_New_York_City_Chinatown.jpg/330px-Nom_Wah_Tea_Parlor_in_New_York_City_Chinatown.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail"
   },
   {
    "id": "osm-n4300313491",
@@ -150,7 +210,13 @@
    "hours": "Tu-Sa 17:30-20:30",
    "menu": "",
    "website": "https://www.dirtcandynyc.com/",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "Q48743720",
+   "wikipedia": "",
+   "about": "Dirt Candy is a vegetarian restaurant on the Lower East Side of Manhattan in New York City. Chef and owner Amanda Cohen opened the restaurant in a small East Village space in 2008, and moved to its present location in 2015. It has received critical attention for its creative dishes which often focus on a single vegetable.",
+   "aboutUrl": "https://en.wikipedia.org/wiki/Dirt_Candy",
+   "aboutSource": "Wikipedia",
+   "image": "https://upload.wikimedia.org/wikipedia/en/f/fa/Dirt_Candy_logo.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail_unscaled"
   },
   {
    "id": "osm-n4319001989",
@@ -163,7 +229,13 @@
    "hours": "We-Su 22:00-04:00",
    "menu": "",
    "website": "https://thecockbar.com/",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "Q88386507",
+   "wikipedia": "",
+   "about": "The Cock is a gay dive bar in the East Village neighborhood of Manhattan in New York, New York, United States. It is noted for its exhibitionist atmosphere and popularity as a cruising destination. Opened in 1998, the venue has been described by them. magazine as \"a rarified taste of old New York and the cruisy gay scene that existed [there] in the '80s and '90s\". In the late 1990s and early 2000s, it experienced frequent police raids under Mayor Rudy Giuliani's anti-nightlife crackdowns. The Cock has relocated twice, and its 2015 move along Second Avenue was met with opposition by nearby residents and Manhattan Community Board 3. Two other attempted moves, in 2014 and 2021, were blocked by the community board. Critics characterize the bar as \"filthy\", \"seductive\", and \"alluring\", noting that it is an unusual find in the United States and bears resemblance to European red-light district establishments.",
+   "aboutUrl": "https://en.wikipedia.org/wiki/The_Cock",
+   "aboutSource": "Wikipedia",
+   "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/70/The_Cock_bar_New_York_City_2013_Shankbone_%28cropped%29.jpg/330px-The_Cock_bar_New_York_City_2013_Shankbone_%28cropped%29.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail"
   },
   {
    "id": "osm-n4775571738",
@@ -176,7 +248,13 @@
    "hours": "11:00-22:00",
    "menu": "",
    "website": "https://www.chinatownicecreamfactory.com/",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "Q126113010",
+   "wikipedia": "en:Chinatown Ice Cream Factory",
+   "about": "The Chinatown Ice Cream Factory is an ice cream parlor in Chinatown, Manhattan, New York City. The business opened in 1977, and is known for their Asian-inspired ice cream flavors. They have also opened two additional locations, in Flushing and the Lower East Side.",
+   "aboutUrl": "https://en.wikipedia.org/wiki/Chinatown_Ice_Cream_Factory",
+   "aboutSource": "Wikipedia",
+   "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/58/Chinatown_Ice_Cream_Factory%2C_New_York_City_%282025%29.jpg/330px-Chinatown_Ice_Cream_Factory%2C_New_York_City_%282025%29.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail"
   },
   {
    "id": "osm-n5265713182",
@@ -189,7 +267,13 @@
    "hours": "Mo-Th,Su 09:00-22:00; Fr-Sa 09:00-23:00",
    "menu": "italian",
    "website": "https://www.ferraranyc.com",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "Q5445247",
+   "wikipedia": "",
+   "about": "Ferrara Bakery and Cafe, established in 1892 by Antonio Ferrara, claims to be America's first espresso bar. It is located in Little Italy, Manhattan, New York City, and offers Italian delicacies. Ferrara has remained a family owned business since its inception, and is operated at its original location on Grand Street by the family's fifth generation of bakers.",
+   "aboutUrl": "https://en.wikipedia.org/wiki/Ferrara_Bakery_and_Cafe",
+   "aboutSource": "Wikipedia",
+   "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/bf/Front_of_Ferrara_Bakery_and_Cafe.jpg/330px-Front_of_Ferrara_Bakery_and_Cafe.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail"
   },
   {
    "id": "osm-n5593016867",
@@ -202,7 +286,12 @@
    "hours": "Mo-We 17:30-22:00; Th-Sa 17:30-22:30",
    "menu": "french",
    "website": "https://www.batardtribeca.com/",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "Q5173371",
+   "wikipedia": "",
+   "about": "Corton was a New French cuisine restaurant located at 239 West Broadway in Tribeca, Manhattan, in New York City run by chef Paul Liebrandt and restaurateur Drew Nieporent.",
+   "aboutUrl": "https://en.wikipedia.org/wiki/Corton_(restaurant)",
+   "aboutSource": "Wikipedia"
   },
   {
    "id": "osm-n5700167968",
@@ -215,7 +304,13 @@
    "hours": "Mo-Sa 08:00-24:00; Su 08:00-23:00",
    "menu": "ukrainian",
    "website": "https://www.veselka.com/location/veselka/",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "Q7923183",
+   "wikipedia": "en:Veselka",
+   "about": "Veselka is a Ukrainian restaurant at 144 Second Avenue in the East Village neighborhood of Manhattan in New York City. It was established in 1954 by Wolodymyr Darmochwal and his wife, Olha Darmochwal, post–World War II Ukrainian refugees. Veselka is one of the last of many Slavic restaurants that once proliferated in the neighborhood. A cookbook, published in October 2009 by St. Martin's Press, highlights more than 120 of the restaurant's Eastern European recipes.",
+   "aboutUrl": "https://en.wikipedia.org/wiki/Veselka",
+   "aboutSource": "Wikipedia",
+   "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/01/Veselka_%2855380948638%29.jpg/330px-Veselka_%2855380948638%29.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail"
   },
   {
    "id": "osm-n6980177370",
@@ -228,7 +323,9 @@
    "hours": "Mo-Th, Su 08:30-23:00; Fr, Sa 08:30-23:30",
    "menu": "italian",
    "website": "https://www.bluegrotta.com/",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "Q18151145",
+   "wikipedia": "en:Grotta Azzurra (restaurant)"
   },
   {
    "id": "osm-n2244654779",
@@ -241,7 +338,13 @@
    "hours": "",
    "menu": "",
    "website": "",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "Q16901513",
+   "wikipedia": "en:The Meatball Shop",
+   "about": "The Meatball Shop was a New York City based restaurant owned and operated by native New Yorkers Daniel Holzman and Michael Chernow, who met as teenagers when they worked together as delivery boys at the New York vegan restaurant Candle Cafe.",
+   "aboutUrl": "https://en.wikipedia.org/wiki/The_Meatball_Shop",
+   "aboutSource": "Wikipedia",
+   "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e7/The_Meatball_Shop_%2814260615203%29.jpg/330px-The_Meatball_Shop_%2814260615203%29.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail"
   },
   {
    "id": "osm-n2555098984",
@@ -254,7 +357,13 @@
    "hours": "",
    "menu": "italian",
    "website": "",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "Q7881256",
+   "wikipedia": "en:Umbertos Clam House",
+   "about": "Umbertos Clam House is an Italian seafood restaurant located at 132 Mulberry Street in Little Italy in Manhattan, New York City. Umbertos became known for its \"tasty dishes of calamari, scungilli, and mussels\", but initially became prominent, weeks after opening, for being the site of the murder of gangster Joe Gallo. The restaurant was founded and is owned by members of the Ianniello family.",
+   "aboutUrl": "https://en.wikipedia.org/wiki/Umbertos_Clam_House",
+   "aboutSource": "Wikipedia",
+   "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c8/Umbertos_Clam_House_and_Il_Fornaio_%2812669747164%29.jpg/330px-Umbertos_Clam_House_and_Il_Fornaio_%2812669747164%29.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail"
   },
   {
    "id": "osm-n2889066126",
@@ -267,7 +376,13 @@
    "hours": "",
    "menu": "",
    "website": "",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "Q6208228",
+   "wikipedia": "en:Joe's Pub",
+   "about": "Joe's Pub, one of the six performance spaces within The Public Theater, is a music venue and restaurant that hosts live performances across genres and arts, ranging from cabaret to modern dance to world music. It is located at the Astor Library Building at 425 Lafayette Street near Astor Place in Manhattan, New York City. It is named after Joseph Papp, the theatrical producer who established the New York Shakespeare Festival, The Public Theater and the free Shakespeare in the Park program in Central Park.",
+   "aboutUrl": "https://en.wikipedia.org/wiki/Joe's_Pub",
+   "aboutSource": "Wikipedia",
+   "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4f/Song_of_Return_performing_at_Joe%27s_Pub%2C_New_York_City%2C_11_April_2012.jpg/330px-Song_of_Return_performing_at_Joe%27s_Pub%2C_New_York_City%2C_11_April_2012.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail"
   },
   {
    "id": "osm-n3573482099",
@@ -280,7 +395,13 @@
    "hours": "",
    "menu": "italian, pub",
    "website": "",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "Q19868052",
+   "wikipedia": "en:Fanelli Cafe",
+   "about": "Fanelli Cafe is a historic New York City restaurant and bar considered the city's second-oldest food-and-drink establishment in the same locale, having operated under various owners at 94 Prince Street since 1847. It served as a gathering place for artists during the transition of Manhattan's SoHo neighborhood from a manufacturing area to an arts community.",
+   "aboutUrl": "https://en.wikipedia.org/wiki/Fanelli_Cafe",
+   "aboutSource": "Wikipedia",
+   "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/eb/NYC_Soho_near_Prince_St.jpg/330px-NYC_Soho_near_Prince_St.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail"
   },
   {
    "id": "osm-n3608032646",
@@ -293,7 +414,13 @@
    "hours": "",
    "menu": "french",
    "website": "",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "Q4852657",
+   "wikipedia": "",
+   "about": "Balthazar is a French brasserie restaurant located at 80 Spring Street in SoHo in Manhattan, in New York City. It opened on April 21, 1997, and is owned by British-born restaurateur Keith McNally.",
+   "aboutUrl": "https://en.wikipedia.org/wiki/Balthazar_(restaurant)",
+   "aboutSource": "Wikipedia",
+   "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/83/Balthazar_on_Spring_Street.jpg/330px-Balthazar_on_Spring_Street.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail"
   },
   {
    "id": "osm-n6434573686",
@@ -306,7 +433,13 @@
    "hours": "Mo-Fr 07:00-11:30; Sa-Su 07:00-12:00",
    "menu": "breakfast, sandwich, eastern_european, jewish",
    "website": "",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "Q123655337",
+   "wikipedia": "en:B&H Dairy",
+   "about": "B&H Dairy is a kosher Jewish dairy restaurant or luncheonette in the East Village of Manhattan in New York City. The original owners, Abie Bergson and Jack Heller, later Sol Hausman, opened it in 1938 when the area was known for the Yiddish Theatre District. Bergson was an aspiring actor, and Molly Picon and Maurice Schwartz were patrons. Bergson sold the luncheonette in the 1970s and it went bankrupt in 1978. Bob Sherman, a partner in a construction firm, bought it. A 1940s style lunch counter B&H serves cheese blintzes with sour cream, borscht, matzo brei, and other kosher dairy Jewish cuisine known as milchik. It is owned and operated by an Egyptian Muslim and Catholic Polish couple, Fawzy and Alexandra Abdelwahed. In 2022, B&H received a grant to redo its landmark facade.",
+   "aboutUrl": "https://en.wikipedia.org/wiki/B%26H_Dairy",
+   "aboutSource": "Wikipedia",
+   "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a0/Lozupone_bnh_%28cropped%29.png/330px-Lozupone_bnh_%28cropped%29.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail"
   },
   {
    "id": "osm-n419362699",
@@ -319,7 +452,9 @@
    "hours": "Tu-Sa 17:00-23:00",
    "menu": "continental, eclectic",
    "website": "https://www.musketroom.com",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n419367357",
@@ -332,7 +467,9 @@
    "hours": "Su, We 11:00-20:30; Tu, Th 11:00-21:00; Fr-Sa 11:00-21:30",
    "menu": "vietnamese",
    "website": "https://nhatrangnyc.net/",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n662433328",
@@ -345,7 +482,9 @@
    "hours": "Mo-Th 11:00-23:00; Fr 11:00-02:00; Sa 10:00-02:00; Su 10:00-23:00",
    "menu": "american",
    "website": "https://www.freemansrestaurant.com",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n886175538",
@@ -358,7 +497,9 @@
    "hours": "Mo-Fr 06:30-19:00; Sa,Su 07:00-19:00",
    "menu": "coffee_shop",
    "website": "https://www.thinkcoffee.com/",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n1109836197",
@@ -371,7 +512,9 @@
    "hours": "Mo off; Tu off; We off; Th,Fr 16:00-00:00; Sa 12:00-00:00; Su 12:00-22:00",
    "menu": "asian",
    "website": "https://www.baonanas.com/",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n1112477518",
@@ -384,7 +527,9 @@
    "hours": "Mo-Su 12:00-16:00,18:00-22:00",
    "menu": "vietnamese",
    "website": "https://mocmacnyc.com",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n1270769388",
@@ -397,7 +542,9 @@
    "hours": "Fr,Sa 10:30-24:00, Su-Th 10:30-22:00",
    "menu": "",
    "website": "https://www.laboratoriodelgelato.com/",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n1362703566",
@@ -410,7 +557,9 @@
    "hours": "Mo-Tu 08:30-15:30; We-Fr 08:30-15:30,17:30-22:00; Sa 08:30-16:00,17:30-22:00; Su 08:30-16:00",
    "menu": "",
    "website": "https://clintonstreetbaking.com/",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n1379410005",
@@ -423,7 +572,9 @@
    "hours": "Mo-Sa 11:00-05:00",
    "menu": "pizza",
    "website": "https://www.strombolipizzeria.com/",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n1683399834",
@@ -436,7 +587,9 @@
    "hours": "Mo 17:00-23:00, Tu-We 17:00-24:00, Th 17:00-01:00, Fr 16:00-01:00, Sa 12:00-01:00, Su 12:00-23:00",
    "menu": "italian",
    "website": "https://www.barbianchinyc.com/",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n1884473154",
@@ -449,7 +602,9 @@
    "hours": "Mo-Sa 07:30-22:30; Su 07:30-22:00",
    "menu": "chinese, dumpling, noodle",
    "website": "https://vanessas.com/",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n1899033658",
@@ -462,7 +617,9 @@
    "hours": "Mo-Fr 17:00-22:00; Sa,Su 12:00-15:30,17:00-22:00",
    "menu": "italian",
    "website": "https://www.pasqualejones.com/",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n1917136131",
@@ -475,7 +632,9 @@
    "hours": "",
    "menu": "coffee_shop",
    "website": "https://www.starbucks.com/store-locator/store/9589/allen-delancey-80-delancey-street-new-york-ny-100023133-us",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n2109918801",
@@ -488,7 +647,9 @@
    "hours": "Mo-Sa 07:30-21:00; Sa, Su 11:00-20:00",
    "menu": "sandwich",
    "website": "https://www.bitenyc.com/",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n2178336350",
@@ -501,7 +662,9 @@
    "hours": "Mo-Sa 07:00-20:00; Su 07:00-19:00",
    "menu": "moroccan, coffee, breakfast, brunch",
    "website": "https://www.pausecafenyc.com/",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n2178443632",
@@ -514,7 +677,9 @@
    "hours": "Tu-Th 12:00-21:00; Fr-Sa 12:00-22:00; Su 12:00-21:00",
    "menu": "",
    "website": "https://www.de-vino.com/",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n2178443636",
@@ -527,7 +692,9 @@
    "hours": "Su-Mo 12:00-04:00",
    "menu": "",
    "website": "https://www.parksidelounge.net/",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n2244694465",
@@ -540,7 +707,9 @@
    "hours": "We-Sa 19:00-04:00; Su 19:00-02:00",
    "menu": "",
    "website": "https://www.bobbarnyc.com/",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n2244743660",
@@ -553,7 +722,9 @@
    "hours": "Mo-Su 18:30-02:00",
    "menu": "",
    "website": "https://www.apothekenyc.com/",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n2487458479",
@@ -566,7 +737,9 @@
    "hours": "Mo-Su 10:00-22:00",
    "menu": "chinese",
    "website": "https://www.goldenunicornrestaurant.com/",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n2494160625",
@@ -579,7 +752,9 @@
    "hours": "We-Su 12:00-22:00",
    "menu": "italian",
    "website": "http://www.sanmarzanonyc.com/",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n2494160674",
@@ -592,7 +767,9 @@
    "hours": "Mo-Th 11:00-23:30; Fr-Sa 11:00-24:00; Su 11:00-23:30",
    "menu": "burger",
    "website": "https://paulsburgersnyc.com",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n2494161089",
@@ -605,7 +782,9 @@
    "hours": "Mo-Su 12:00-22:00",
    "menu": "ramen",
    "website": "https://www.mrkeke.net/restaurant-location-manhattan",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n2494245451",
@@ -618,7 +797,9 @@
    "hours": "Mo-Th 14:00-22:00; Fr-Su 14:00-23:00",
    "menu": "bubble_tea",
    "website": "https://xingfutang.com",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n2495735668",
@@ -631,7 +812,9 @@
    "hours": "Mo-Su 14:00-04:00",
    "menu": "",
    "website": "https://www.clockworknyc.com/",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n2546985590",
@@ -644,7 +827,9 @@
    "hours": "Mo-Fr 07:00-19:00; Sa-Su 08:00-19:00",
    "menu": "coffee_shop, sandwich",
    "website": "https://konacoffee.nyc/",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n2546985593",
@@ -657,7 +842,9 @@
    "hours": "Mo-Su 10:30-15:00,17:30-23:00",
    "menu": "chinese",
    "website": "https://www.dimsumpalace.com",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n2547036945",
@@ -670,7 +857,9 @@
    "hours": "We-Su 17:30-21:30",
    "menu": "american",
    "website": "https://greatjonesdistillingco.com/restaurant/",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n2547041086",
@@ -683,7 +872,9 @@
    "hours": "Mo-Su 08:00-19:00 \"cafe\"||Mo-Su 09:00-19:00 \"shop\"",
    "menu": "",
    "website": "https://www.plantshed.com/retail-prince-st",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n2547054885",
@@ -696,7 +887,9 @@
    "hours": "Mo-Su 07:00-21:00",
    "menu": "coffee_shop",
    "website": "https://www.thebean.nyc",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n2547083556",
@@ -709,7 +902,9 @@
    "hours": "Mo-Su 09:00-19:00",
    "menu": "coffee_shop",
    "website": "https://www.cafehabibti.com",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n2547109169",
@@ -722,7 +917,9 @@
    "hours": "",
    "menu": "coffee_shop",
    "website": "https://felixroastingco.com/",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n2547110366",
@@ -735,7 +932,9 @@
    "hours": "We, Th 11:30-23:00; Fr, Sa 11:30-00:00; Mo, Tu, Su 11:30-22:00",
    "menu": "mexican",
    "website": "https://www.doscaminos.com/soho/",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n2547121461",
@@ -748,7 +947,9 @@
    "hours": "Mo-Sa 18:00-22:00, Su 11:00-14:30",
    "menu": "eclectic",
    "website": "https://hagsnyc.com",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n2547121512",
@@ -761,7 +962,9 @@
    "hours": "Mo-Su 08:00-18:00",
    "menu": "coffee_shop",
    "website": "https://www.notasbitter.com",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n2547141627",
@@ -774,7 +977,9 @@
    "hours": "Mo-Th 12:00-23:00, Fr-Sa 12:00-24:00, Su 12:00-23:00",
    "menu": "asian, tea_house, sandwich, brunch",
    "website": "https://www.princeteahouse.com",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n2547223602",
@@ -787,7 +992,9 @@
    "hours": "",
    "menu": "",
    "website": "https://manuela-nyc.com",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n2547241551",
@@ -800,7 +1007,9 @@
    "hours": "",
    "menu": "italian",
    "website": "https://www.lapecorabianca.com",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n2547241563",
@@ -813,7 +1022,9 @@
    "hours": "Mo-Su 11:30-21:30",
    "menu": "mexican",
    "website": "https://eatsantotaco.com/",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n2547241579",
@@ -826,7 +1037,9 @@
    "hours": "",
    "menu": "",
    "website": "https://citizens.coffee/citizens-of-soho",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n2547241584",
@@ -839,7 +1052,9 @@
    "hours": "Mo-Su 09:00-23:00",
    "menu": "american, breakfast",
    "website": "https://www.rubyscafe.com/location/soho/",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n2547241610",
@@ -852,7 +1067,9 @@
    "hours": "",
    "menu": "",
    "website": "https://www.santambroeus.com",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n2547241630",
@@ -865,7 +1082,9 @@
    "hours": "Mo-Th 10:00-22:00, Fr-Sa 10:00-24:00, Su 10:00-22:00",
    "menu": "french, breakfast",
    "website": "https://champerssocialclub.com",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n2547241666",
@@ -878,7 +1097,9 @@
    "hours": "",
    "menu": "pizza",
    "website": "https://www.upsidepizza.com/",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n2547242036",
@@ -891,7 +1112,9 @@
    "hours": "Mo-Th 08:30-22:00; Fr-Sa 08:30-23:00; Su 08:30-21:00",
    "menu": "mediterranean, american, brunch",
    "website": "https://jackswifefreda.com",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n2547243350",
@@ -904,7 +1127,9 @@
    "hours": "Mo-Fr 09:00-18:00; Sa 10:00-19:00; Su 10:00-17:00",
    "menu": "indian",
    "website": "https://kolkatachai.co",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n2547245925",
@@ -917,7 +1142,9 @@
    "hours": "Mo-Fr 11:00-24:00, Sa-Su 10:00-24:00",
    "menu": "american",
    "website": "https://grandstreetsocial.com/",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n368061607",
@@ -930,7 +1157,13 @@
    "hours": "Tu-Sa 10:00-17:00",
    "menu": "",
    "website": "https://www.daheshmuseum.org/",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "Q2999991",
+   "wikipedia": "en:Dahesh Museum of Art",
+   "about": "The Dahesh Museum of Art is the only museum in the United States devoted to the collection and exhibition of European academic art of the 19th and 20th century. The collection, located in Manhattan, New York City, originated with Lebanese writer and philosopher Salim Moussa Achi (1909–1984), whose pen name was Dr. Dahesh. The core of the museum's holdings consists of Dahesh's collection of more than 2,000 academic paintings, which includes many notable Orientalist paintings.",
+   "aboutUrl": "https://en.wikipedia.org/wiki/Dahesh_Museum_of_Art",
+   "aboutSource": "Wikipedia",
+   "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c1/Dahesh_Museum_of_Art_%2855381213215%29.jpg/330px-Dahesh_Museum_of_Art_%2855381213215%29.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail"
   },
   {
    "id": "osm-n9161604572",
@@ -943,7 +1176,13 @@
    "hours": "Mo-Th 12:00-20:00; Fr, Sa 12:00-20:30; Su 13:00-19:30",
    "menu": "",
    "website": "https://www.trashandvaudeville.com/",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "Q7835730",
+   "wikipedia": "en:Trash and Vaudeville",
+   "about": "Trash and Vaudeville is a store located at 96 East 7th Street between Avenue A and First Avenue in East Village in Manhattan, New York. The store is associated with the clothing styles of punk rock and various other counter culture movements, and has been a leading source of fashion inspiration since its inception by owner and founder Ray Goodman in 1975.",
+   "aboutUrl": "https://en.wikipedia.org/wiki/Trash_and_Vaudeville",
+   "aboutSource": "Wikipedia",
+   "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/83/Trash_and_Vaudeville_%2855381215650%29.jpg/330px-Trash_and_Vaudeville_%2855381215650%29.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail"
   },
   {
    "id": "osm-n419361814",
@@ -956,7 +1195,9 @@
    "hours": "Mo 12:00-18:30; Tu-We 12:00-19:00; Th 12:00-20:00; Fr-Sa 12:00-21:00; Su 12:00-19:00",
    "menu": "",
    "website": "https://randomaccessoriesnyc.com",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n886392347",
@@ -969,7 +1210,9 @@
    "hours": "Mo-Fr 10:00-18:00; Sa 11:00-17:00",
    "menu": "",
    "website": "https://www.bkstr.com/nyustore/home",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n886674467",
@@ -982,7 +1225,9 @@
    "hours": "Mo-Sa 11:00-21:00; Su 12:00-19:30",
    "menu": "",
    "website": "https://www.infinityshoes.com/infinity-nyc",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n887114819",
@@ -995,7 +1240,9 @@
    "hours": "Mo-We 11:00-20:00, Th-Sa 10:00-20:00, Su 11:00-19:00",
    "menu": "",
    "website": "https://mariatash.com/",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n1112495101",
@@ -1008,7 +1255,9 @@
    "hours": "Mo-Su 12:00-19:00",
    "menu": "",
    "website": "https://www.pageantprintshop.nyc",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n1241281004",
@@ -1021,7 +1270,9 @@
    "hours": "Mo-Su 11:00-20:00",
    "menu": "",
    "website": "https://www.uniqlo.com/us/en/stores-details/?StoreID=10200001",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n1378899236",
@@ -1034,7 +1285,9 @@
    "hours": "Mo-Sa 11:00-19:00; Su 12:00-18:00",
    "menu": "",
    "website": "https://suitsupply.com/en-us/stores-detail?storeID=stores-NewYork-Soho",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n1378899289",
@@ -1047,7 +1300,9 @@
    "hours": "Mo-Sa 10:00-20:00, Su 11:00-19:00",
    "menu": "",
    "website": "https://stores.jcrew.com/us/ny/new-york/484-broadway",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n1608795907",
@@ -1060,7 +1315,9 @@
    "hours": "Mo-Sa 11:00-21:00; Su 11:00-20:00",
    "menu": "",
    "website": "https://www.urbanoutfitters.com/urban/stores/urban-outfitters-soho",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n2178336349",
@@ -1073,7 +1330,9 @@
    "hours": "",
    "menu": "",
    "website": "http://www.nystudiogallery.com/",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n2501562611",
@@ -1086,7 +1345,9 @@
    "hours": "Mo-Sa 11:00-19:00; Su 11:00-17:00",
    "menu": "coffee_shop",
    "website": "https://www.housingworks.org/locations/bookstore-cafe",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n2547000493",
@@ -1099,7 +1360,9 @@
    "hours": "Mo-Sa 12:00-19:00; Su 12:00-18:00",
    "menu": "",
    "website": "https://us.octobersveryown.com/pages/new-york",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n2547041166",
@@ -1112,7 +1375,9 @@
    "hours": "Mo-Fr 11:00-19:00, Sa-Su 11:00-20:00",
    "menu": "",
    "website": "https://nursanfrancisco.com",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n2547067890",
@@ -1125,7 +1390,9 @@
    "hours": "\"by appointment\"",
    "menu": "",
    "website": "https://www.jaykos.com",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n2547109069",
@@ -1138,7 +1405,9 @@
    "hours": "Mo-Su 11:00-19:00",
    "menu": "",
    "website": "https://store.maxmara.com/en/united-states/new-york-soho/125-prince-street/max-mara-new-york-soho",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n2547109311",
@@ -1151,7 +1420,9 @@
    "hours": "Mo-Sa 10:00-20:00; Su 11:00-19:00",
    "menu": "",
    "website": "https://stores.arcteryx.com/broadway",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n2547109321",
@@ -1164,7 +1435,9 @@
    "hours": "Mo-Sa 10:00-19:00; Su 11:00-18:00",
    "menu": "",
    "website": "https://locations.thenorthface.com/en-us/NY/New%20York/USA527/",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n2547109375",
@@ -1177,7 +1450,9 @@
    "hours": "Mo-Su 08:00-21:00",
    "menu": "",
    "website": "https://www.target.com/sl/manhattan-soho/3411",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n2547223606",
@@ -1190,7 +1465,9 @@
    "hours": "Mo-Su 10:00-22:00",
    "menu": "",
    "website": "https://www.mcnallyjackson.com/",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n2547223663",
@@ -1203,7 +1480,9 @@
    "hours": "Mo-Sa 10:00-20:00; Su 11:00-19:00",
    "menu": "",
    "website": "https://www.ralphlauren.com/stores-rrl-broadway-store-lp",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n2547241619",
@@ -1216,7 +1495,9 @@
    "hours": "Mo-Sa 11:00-18:00; Su 12:00-18:00",
    "menu": "",
    "website": "https://us.carhartt-wip.com/pages/store-newyork",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n2547241639",
@@ -1229,7 +1510,9 @@
    "hours": "",
    "menu": "",
    "website": "https://www.blundstone.com/stores/blundstone-shop---soho-new-york-city",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n2547241657",
@@ -1242,7 +1525,9 @@
    "hours": "",
    "menu": "",
    "website": "www.mystiqyeboutiquenyc.com",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n2547241658",
@@ -1255,7 +1540,9 @@
    "hours": "11:00-19:00; Fr,Sa 10:00-19:00",
    "menu": "",
    "website": "https://locations.levi.com/en-us/ny/newyork/denim_new-york_ny_185.html",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n2547241675",
@@ -1268,7 +1555,9 @@
    "hours": "",
    "menu": "",
    "website": "https://www.businessinsider.com/brandy-melville-teen-fast-fashion-racism-exploitation-hitler-marsan-2021-9",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n2547241706",
@@ -1281,7 +1570,9 @@
    "hours": "",
    "menu": "",
    "website": "https://www.mango.com/",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n2547241811",
@@ -1294,7 +1585,9 @@
    "hours": "",
    "menu": "",
    "website": "https://www.aloyoga.com",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n2547243313",
@@ -1307,7 +1600,9 @@
    "hours": "Tu-Su 11:00-19:00",
    "menu": "",
    "website": "https://loefflerrandall.com",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n2547243328",
@@ -1320,7 +1615,9 @@
    "hours": "Mo-Su 11:00-19:00",
    "menu": "",
    "website": "https://themjewelersny.com",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n2547243336",
@@ -1333,7 +1630,9 @@
    "hours": "Mo-We 11:00-19:00; Th 11:00-20:00; Fr-Sa 11:00-19:00; Su 12:00-18:00",
    "menu": "",
    "website": "https://www.feitdirect.com",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n2547243512",
@@ -1346,7 +1645,9 @@
    "hours": "Mo-Sa 11:30-18:30",
    "menu": "",
    "website": "https://www.groupe.nyc",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n2547246926",
@@ -1359,7 +1660,9 @@
    "hours": "Mo-Sa 11:00-19:00",
    "menu": "",
    "website": "https://18east.co",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n2547466292",
@@ -1372,7 +1675,9 @@
    "hours": "Mo-Sa 11:00-19:00, Su 12:00-18:00",
    "menu": "",
    "website": "https://www.maisonmargiela.com/en-us/stores/maison-margiela-crosby",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n2555120303",
@@ -1385,7 +1690,9 @@
    "hours": "Mo-Sa 12:00-19:00, Su 12:00-18:00",
    "menu": "",
    "website": "https://marketstudios.com/pages/summer-2024-pop-up",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n2555120309",
@@ -1398,7 +1705,9 @@
    "hours": "Mo-Sa 11:00-19:00, Su 12:00-18:00",
    "menu": "",
    "website": "https://www.rickowens.eu/en/US/stores/newyork",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n2555120320",
@@ -1411,7 +1720,9 @@
    "hours": "11:00-19:00",
    "menu": "",
    "website": "https://www.stadiumgoods.com/",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n2555120407",
@@ -1424,7 +1735,9 @@
    "hours": "Mo-Su 11:00-19:00",
    "menu": "",
    "website": "https://www.pearlriver.com/",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n2555126631",
@@ -1437,7 +1750,9 @@
    "hours": "Mo-Th 12:00-20:30; Fr-Sa 11:00-21:00; Su 11:00-19:00",
    "menu": "",
    "website": "https://askannyc.com",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n2563988677",
@@ -1450,7 +1765,9 @@
    "hours": "Mo-Sa 10:00-19:00",
    "menu": "",
    "website": "https://www.dgscarf.com/",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n2567557153",
@@ -1463,7 +1780,9 @@
    "hours": "Mo-Fr 11:00-19:00, Su 12:00-18:00",
    "menu": "",
    "website": "https://www.miista.com/en/internet/miista-new-york-store-and-rage-room",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n2567557160",
@@ -1476,7 +1795,9 @@
    "hours": "Mo-Th 12:00-19:00, Fr 11:30-19:00, Sa 11:00-19:00, Su 11:00-18:00",
    "menu": "",
    "website": "https://www.thevintagetwin.com",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n2567557177",
@@ -1489,7 +1810,9 @@
    "hours": "",
    "menu": "",
    "website": "https://lukes.store",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n2567557180",
@@ -1502,7 +1825,9 @@
    "hours": "Mo,We-Su 12:00-19:00",
    "menu": "",
    "website": "https://komune.space",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n2567561024",
@@ -1515,7 +1840,9 @@
    "hours": "Mo-Fr 12:00-19:00; Sa-Su 11:00-19:00",
    "menu": "",
    "website": "https://comingsoonnewyork.com/pages/contact",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n2567561026",
@@ -1528,7 +1855,9 @@
    "hours": "",
    "menu": "",
    "website": "https://www.rarebodega.com",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n2567561386",
@@ -1541,7 +1870,9 @@
    "hours": "Mo-Su 12:00-19:00",
    "menu": "",
    "website": "https://cafeforgot.com",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n3214617213",
@@ -1554,7 +1885,9 @@
    "hours": "",
    "menu": "",
    "website": "https://helenficalora.com/pages/new-york",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n4113171311",
@@ -1567,7 +1900,9 @@
    "hours": "Mo-Su 11:00-19:00",
    "menu": "",
    "website": "https://www.strandedrecords.com/pages/contact",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n368042980",
@@ -1580,7 +1915,12 @@
    "hours": "We-Sa 12:00-18:00",
    "menu": "",
    "website": "https://storefront.nyc",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "Q7619980",
+   "wikipedia": "en:Storefront for Art and Architecture",
+   "about": "Storefront for Art and Architecture is an independent, non-profit art and architecture organization located in Manhattan's SoHo neighborhood. The organization is committed to the advancement of innovative positions in architecture, art and design.",
+   "aboutUrl": "https://en.wikipedia.org/wiki/Storefront_for_Art_and_Architecture",
+   "aboutSource": "Wikipedia"
   },
   {
    "id": "osm-n368061660",
@@ -1593,7 +1933,13 @@
    "hours": "Mo-Su 10:00-17:30; Fr,Sa 10:00-18:00",
    "menu": "",
    "website": "https://www.tenement.org/",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "Q901533",
+   "wikipedia": "en:Lower East Side Tenement Museum",
+   "about": "The Lower East Side Tenement Museum is a museum and National Historic Site located at 97 and 103 Orchard Street on the Lower East Side of Manhattan in New York City, United States. The museum's two historical tenement buildings were home to an estimated 15,000 people, from over 20 nations, between 1863 and 1935 and 1888 and 2015. The museum, which includes a visitors' center, promotes tolerance and historical perspective on the immigrant experience.",
+   "aboutUrl": "https://en.wikipedia.org/wiki/Lower_East_Side_Tenement_Museum",
+   "aboutSource": "Wikipedia",
+   "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/50/97_Orchard_Street_Front.jpg/330px-97_Orchard_Street_Front.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail"
   },
   {
    "id": "osm-n5509996164",
@@ -1606,7 +1952,13 @@
    "hours": "Th,Fr 13:00-17:00",
    "menu": "",
    "website": "https://www.rcgrossfoundation.org/",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "Q24259668",
+   "wikipedia": "",
+   "about": "The Renee and Chaim Gross Foundation is a non-profit organization incorporated in 1989 dedicated to the study of modern American sculptor Chaim Gross (1902–91), his contemporaries, and the history of 20th-century American art. It is located in the sculptor's four-story historic home on LaGuardia Place in Manhattan's Greenwich Village neighborhood and is open to the public. In addition to the artist's sculpture and drawings, it also exhibits important works of American, European, Pre-Columbian and African art that the artist collected. In 2015, the Foundation won a Village Award from the Greenwich Village Society for Historic Preservation for its contributions as a resource to the downtown community.",
+   "aboutUrl": "https://en.wikipedia.org/wiki/Renee_and_Chaim_Gross_Foundation",
+   "aboutSource": "Wikipedia",
+   "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6f/Studio_space_at_The_Renee_%26_Chaim_Gross_Foundation.jpg/330px-Studio_space_at_The_Renee_%26_Chaim_Gross_Foundation.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail"
   },
   {
    "id": "osm-n5640186350",
@@ -1619,7 +1971,13 @@
    "hours": "Sa-Su 12:00-18:00 open \"Museum\" || 00:00-24:00 open \"Viewing windows\"",
    "menu": "",
    "website": "https://www.mmuseumm.com/",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "Q22329588",
+   "wikipedia": "en:Mmuseumm",
+   "about": "Mmuseumm is a modern natural history museum located in Tribeca, Lower Manhattan in New York City. The museum displays contemporary artifacts in a style reminiscent of the historical cabinet of curiosities model.",
+   "aboutUrl": "https://en.wikipedia.org/wiki/Mmuseumm",
+   "aboutSource": "Wikipedia",
+   "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b4/Mmuseumm_1.png/330px-Mmuseumm_1.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail"
   },
   {
    "id": "osm-n5747425246",
@@ -1632,7 +1990,13 @@
    "hours": "",
    "menu": "",
    "website": "https://www.centerforarchitecture.org/",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "Q5059504",
+   "wikipedia": "",
+   "about": "The Center for Architecture is located in the neighborhood of Greenwich Village at 536 LaGuardia Place, between West 3rd Street and Bleecker Street in Manhattan, New York City. The center was designed by architect Andrew Berman and completed in 2003. Since its inception, the center, operated by the New York Chapter of the American Institute of Architects, has become an increasingly important cultural institution through its revolving exhibits on architecture, urban planning, urban design, and environmental planning. The center also puts on seminars, public feedback forums, project unveilings, and educational programs, as well as events and changing exhibitions.",
+   "aboutUrl": "https://en.wikipedia.org/wiki/Center_for_Architecture",
+   "aboutSource": "Wikipedia",
+   "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/95/AIA_New_York_Center_for_Architecture_%2854024538548%29.jpg/330px-AIA_New_York_Center_for_Architecture_%2854024538548%29.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail"
   },
   {
    "id": "osm-n9136326361",
@@ -1645,7 +2009,13 @@
    "hours": "We 12:00-17:00; Th-Su 12:00-18:00; Jan 01 off; Jun 19 off; Jun Su[-1] off; Jul 04 off; Nov 11 off; Nov Th[4] off; Dec 24-25 off; Dec 31 off",
    "menu": "",
    "website": "https://www.leslielohman.org/",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "Q6530976",
+   "wikipedia": "en:Leslie-Lohman Museum of Art",
+   "about": "The Leslie-Lohman Museum of Art (LLMA), formerly the Leslie-Lohman Museum of Gay and Lesbian Art, is a visual art museum in SoHo, Lower Manhattan, New York City. It mainly collects, preserves and exhibits visual arts created by LGBTQ artists or art about LGBTQ+ themes, issues, and people. The museum, operated by the Leslie-Lohman Gay Art Foundation, offers exhibitions year-round in numerous locations and owns more than 22,000 objects, including, paintings, drawings, photography, prints and sculpture. Stamatina Gregory is Head Curator and Director of Exhibitions and Collections at the Leslie-Lohman Museum of Art. The foundation was awarded Museum status by the New York State Board of Regents in 2011 and was formally accredited as a museum in 2016. The museum is a member of the American Alliance of Museums and operates pursuant to their guidelines. As of 2019, the LLMA was the only museum in the world dedicated to artwork documenting the LGBTQ experience.",
+   "aboutUrl": "https://en.wikipedia.org/wiki/Leslie-Lohman_Museum_of_Art",
+   "aboutSource": "Wikipedia",
+   "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/ed/Leslie-Lohman_Museum_of_Gay_and_Lesbian_Art_-_NYC_%2848129032106%29.jpg/330px-Leslie-Lohman_Museum_of_Gay_and_Lesbian_Art_-_NYC_%2848129032106%29.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail"
   },
   {
    "id": "osm-n13732385972",
@@ -1658,7 +2028,13 @@
    "hours": "Tu,We,Fr-Su 11:00-18:00; Th 11:00-21:00",
    "menu": "",
    "website": "https://www.newmuseum.org/",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "Q1156823",
+   "wikipedia": "en:New Museum",
+   "about": "The New Museum of Contemporary Art is a museum at 235 Bowery, on the Lower East Side of Manhattan in New York City. It was founded in 1977 by Marcia Tucker.",
+   "aboutUrl": "https://en.wikipedia.org/wiki/New_Museum",
+   "aboutSource": "Wikipedia",
+   "image": "https://thumb.wikimedia.org/wikipedia/en/thumb/6/6a/New_Museum_Logo.jpg/330px-New_Museum_Logo.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail"
   },
   {
    "id": "osm-w241833272",
@@ -1671,7 +2047,13 @@
    "hours": "We-Su 12:00-18:00",
    "menu": "",
    "website": "https://www.theukrainianmuseum.org/",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "Q4470591",
+   "wikipedia": "en:Ukrainian Museum",
+   "about": "The Ukrainian Museum, founded in 1976 by the Ukrainian National Women's League of America in New York City, is the largest museum of its kind outside of Ukraine and is dedicated to the enjoyment, understanding, and preservation of the artistic and cultural heritage of Ukraine. For centuries, Ukraine has been an epicenter for creative output — from traditional music, dance, and folk art to the birthplace of modern art and cinema. Today, the country celebrates its cultural impact on the world for people of all backgrounds. The museum's building was designed by Ukrainian-American architect George Sawicki of Sawicki Tarella Architecture + Design in New York City, and was funded by the Ukrainian-American community. The museum is located at 222 East 6th Street between Second Avenue and Cooper Square in the East Village neighborhood of Manhattan.",
+   "aboutUrl": "https://en.wikipedia.org/wiki/Ukrainian_Museum",
+   "aboutSource": "Wikipedia",
+   "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/82/The_Ukrainian_Museum_%2851661210605%29.jpg/330px-The_Ukrainian_Museum_%2851661210605%29.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail"
   },
   {
    "id": "osm-w247838607",
@@ -1684,7 +2066,13 @@
    "hours": "Sep-May Th-Su 13:00-17:00; Jun-Aug We-Su 13:00-17:00; PH off",
    "menu": "",
    "website": "https://merchantshouse.org/",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "Q3306353",
+   "wikipedia": "en:Merchant's House Museum",
+   "about": "The Merchant's House Museum, also known as the Old Merchant's House and the Seabury Tredwell House, is a historic house museum at 29 East Fourth Street in the NoHo neighborhood of Manhattan in New York City. Built by the hatter Joseph Brewster in 1831 and 1832, the edifice is a four-story building with a Federal-style brick facade and a Greek Revival interior. It was the Tredwell family's residence for almost a century before becoming a museum in 1936. The Merchant's House Museum is the only 19th-century residence in Manhattan with its original exterior and interior intact.",
+   "aboutUrl": "https://en.wikipedia.org/wiki/Merchant's_House_Museum",
+   "aboutSource": "Wikipedia",
+   "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f7/Merchant%27s_House_Museum_%2848072654706%29.jpg/330px-Merchant%27s_House_Museum_%2848072654706%29.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail"
   },
   {
    "id": "osm-w247867461",
@@ -1697,7 +2085,13 @@
    "hours": "",
    "menu": "",
    "website": "https://capitaleny.com",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "Q56606042",
+   "wikipedia": "en:Bowery Savings Bank",
+   "about": "The Bowery Savings Bank was a bank in New York City, chartered in May 1834. In 1930, it was the largest bank in the United States based on total deposits. By 1980, it had over 35 branches in the New York metropolitan area. In 1992, it was sold to H. F. Ahmanson & Co. for $200 million.",
+   "aboutUrl": "https://en.wikipedia.org/wiki/Bowery_Savings_Bank",
+   "aboutSource": "Wikipedia",
+   "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/56/Bowery_Savings_Bank_-_Entrance_%2851624125693%29.jpg/330px-Bowery_Savings_Bank_-_Entrance_%2851624125693%29.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail"
   },
   {
    "id": "osm-w247920477",
@@ -1710,7 +2104,9 @@
    "hours": "Tu-Sa 10:00-18:00",
    "menu": "",
    "website": "https://www.speronewestwater.com/",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "Q7576405",
+   "wikipedia": ""
   },
   {
    "id": "osm-w249664327",
@@ -1723,7 +2119,13 @@
    "hours": "We-Su 12:00-18:00",
    "menu": "",
    "website": "https://drawingcenter.org",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "Q3039170",
+   "wikipedia": "",
+   "about": "The Drawing Center is a museum and a nonprofit exhibition space in Manhattan, New York City, that focuses on the exhibition of drawings, both historical and contemporary.",
+   "aboutUrl": "https://en.wikipedia.org/wiki/Drawing_Center",
+   "aboutSource": "Wikipedia",
+   "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/2a/The_Drawing_Center_-_NYC_%2848129060193%29.jpg/330px-The_Drawing_Center_-_NYC_%2848129060193%29.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail"
   },
   {
    "id": "osm-w250267911",
@@ -1736,7 +2138,13 @@
    "hours": "Mo-Su 10:00-17:00; Sa off; Dec 31-Jan 01 off; Nov Th[4] off; Nov Fr[4] off",
    "menu": "",
    "website": "https://www.eldridgestreet.org/",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "Q1113721",
+   "wikipedia": "en:Eldridge Street Synagogue",
+   "about": "The Eldridge Street Synagogue is an Orthodox Jewish synagogue at 12–16 Eldridge Street in the Chinatown and Lower East Side neighborhoods of Manhattan in New York City. Built in 1887 for Congregation Kahal Adath Jeshurun, the synagogue is one of the first erected in the U.S. by Eastern European Jews. The congregation, officially known as Kahal Adath Jeshurun with Anshe Lubz, still owns the synagogue and hosts weekly services there in the 21st century. The Museum at Eldridge Street, founded in 1986 as the Eldridge Street Project, also occupies the synagogue under a long-term lease. The building is a National Historic Landmark and a New York City designated landmark.",
+   "aboutUrl": "https://en.wikipedia.org/wiki/Eldridge_Street_Synagogue",
+   "aboutSource": "Wikipedia",
+   "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b2/Museum_at_Eldridge_Street_%2852302295706%29.jpg/330px-Museum_at_Eldridge_Street_%2852302295706%29.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail"
   },
   {
    "id": "osm-w1233699772",
@@ -1749,7 +2157,13 @@
    "hours": "Tu, We, Fr-Su 11:00-18:00; Th 11:00-21:00",
    "menu": "",
    "website": "https://www.mocanyc.org",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "Q1278593",
+   "wikipedia": "",
+   "about": "The Museum of Chinese in America is a museum in Chinatown, Manhattan, New York City, which exhibits Chinese American history. It is a nonprofit 501(c)(3) education and cultural institution that presents the living history, heritage, culture, and diverse experiences of Chinese Americans through exhibitions, educational services and public programs. Much of its collection was damaged or destroyed in a fire in January 2020. The museum reopened to the public on July 15, 2021. It has been criticized by some Chinatown residents due to concerns related to gentrification.",
+   "aboutUrl": "https://en.wikipedia.org/wiki/Museum_of_Chinese_in_America",
+   "aboutSource": "Wikipedia",
+   "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/19/MOCA_Centre_St_sunny_morn_jeh.JPG/330px-MOCA_Centre_St_sunny_morn_jeh.JPG?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail"
   },
   {
    "id": "osm-n357642349",
@@ -1762,7 +2176,13 @@
    "hours": "",
    "menu": "",
    "website": "",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "Q5086283",
+   "wikipedia": "en:Charlton–King–Vandam Historic District",
+   "about": "The Charlton–King–Vandam Historic District is a small historic district in Lower Manhattan, New York City. Designated by the New York City Landmarks Preservation Commission (NYCLPC) in 1966, the district contains \"the city's largest concentration of row houses in the Federal style, as well as a significant concentration of Greek Revival houses.\" It is sometimes included as part of the South Village or Hudson Square, though it is historically distinct from both neighborhoods.",
+   "aboutUrl": "https://en.wikipedia.org/wiki/Charlton%E2%80%93King%E2%80%93Vandam_Historic_District",
+   "aboutSource": "Wikipedia",
+   "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5e/35_%26_37_Charlton_Street.jpg/330px-35_%26_37_Charlton_Street.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail"
   },
   {
    "id": "osm-n357642392",
@@ -1775,7 +2195,9 @@
    "hours": "",
    "menu": "",
    "website": "",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "Q49562891",
+   "wikipedia": ""
   },
   {
    "id": "osm-n1329113669",
@@ -1788,7 +2210,13 @@
    "hours": "",
    "menu": "",
    "website": "",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "Q20880848",
+   "wikipedia": "en:Triumph of the Human Spirit",
+   "about": "Triumph of the Human Spirit is a 2000 black granite sculpture by Lorenzo Pace, installed at Manhattan's Foley Square, in the U.S. state of New York. According to the City of New York, the 50-foot-high (15.2 m), 300-short-ton (272.2 t), abstract monument is derived from the female antelope Chiwara forms of Bambaran art. The sculpture is sited near a rediscovered Colonial-era African Burial Ground, and its support structure alludes to the slave trade's Middle Passage. Following the 1991 discovery of the African Burial Ground, the work was commissioned by the New York City Government program Percent for Art. The work was dedicated on Columbus Day, 2000. Pace feels that Columbus Day is an inappropriate date to celebrate his \"work that honors the slaves, immigrants, and Indians who were wronged in this nation's formative years.\" He and other African-Americans boycotted the unveiling because of the Columbus Day date, which was chosen as a rare day in which both New York City Mayor Rudy Giuliani and United States Senator Daniel Patrick Moynihan could synch their availability. The work was commissioned for $750,000, but took 8 years to complete. The sculpture has received a lot of notoriety as a gathering place for demonstrations and rallies.",
+   "aboutUrl": "https://en.wikipedia.org/wiki/Triumph_of_the_Human_Spirit",
+   "aboutSource": "Wikipedia",
+   "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/27/22-06-30_04_EPA_Shot_Down_%2852185167811%29.jpg/330px-22-06-30_04_EPA_Shot_Down_%2852185167811%29.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail"
   },
   {
    "id": "osm-n8149922758",
@@ -1801,7 +2229,9 @@
    "hours": "",
    "menu": "",
    "website": "",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "Q65941072",
+   "wikipedia": ""
   },
   {
    "id": "osm-w247867323",
@@ -1814,7 +2244,13 @@
    "hours": "",
    "menu": "",
    "website": "",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "Q2813546",
+   "wikipedia": "en:240 Centre Street",
+   "about": "240 Centre Street, formerly the New York City Police Headquarters, is a building in the Little Italy neighborhood of Manhattan in New York City, United States. Designed by the firm Hoppin & Koen, it was the headquarters of the New York City Police Department (NYPD) from 1909 to 1973. Afterward, it was converted into a luxury residential building in 1988 by the firm Ehrenkranz Group & Eckstut, becoming the Police Building Apartments. 240 Centre Street occupies an entire city block between Centre Street to the west, Broome Street to the north, Centre Market Place to the east, and Grand Street to the south. It is a New York City designated landmark and on the National Register of Historic Places.",
+   "aboutUrl": "https://en.wikipedia.org/wiki/240_Centre_Street",
+   "aboutSource": "Wikipedia",
+   "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f3/Old_Police_Headquarters_-_NYPD_%2851623900396%29.jpg/330px-Old_Police_Headquarters_-_NYPD_%2851623900396%29.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail"
   },
   {
    "id": "osm-w250266578",
@@ -1827,7 +2263,9 @@
    "hours": "",
    "menu": "",
    "website": "",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "Q6134973",
+   "wikipedia": ""
   },
   {
    "id": "osm-w352412115",
@@ -1840,7 +2278,13 @@
    "hours": "",
    "menu": "",
    "website": "",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "Q6721855",
+   "wikipedia": "en:MacDougal–Sullivan Gardens Historic District",
+   "about": "The MacDougal–Sullivan Gardens Historic District is a small historic district of twenty-two houses at 74–96 MacDougal Street and 170–188 Sullivan Street between Houston and Bleecker Streets in the South Village area of the Greenwich Village neighborhood of Manhattan, New York City.",
+   "aboutUrl": "https://en.wikipedia.org/wiki/MacDougal%E2%80%93Sullivan_Gardens_Historic_District",
+   "aboutSource": "Wikipedia",
+   "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5c/82-96_MacDougal_Street.jpg/330px-82-96_MacDougal_Street.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail"
   },
   {
    "id": "osm-w576178058",
@@ -1853,7 +2297,9 @@
    "hours": "",
    "menu": "",
    "website": "",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "Q28563370",
+   "wikipedia": ""
   },
   {
    "id": "osm-r11077079",
@@ -1866,7 +2312,13 @@
    "hours": "",
    "menu": "",
    "website": "",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "Q383996",
+   "wikipedia": "en:African Burial Ground National Monument",
+   "about": "African Burial Ground National Monument is a monument at Duane Street and African Burial Ground Way in the Civic Center section of Lower Manhattan, New York City. Its main building is the Ted Weiss Federal Building at 290 Broadway.",
+   "aboutUrl": "https://en.wikipedia.org/wiki/African_Burial_Ground_National_Monument",
+   "aboutSource": "Wikipedia",
+   "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/0d/African_Burial_Ground.jpg/330px-African_Burial_Ground.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail"
   },
   {
    "id": "osm-n2477560532",
@@ -1879,7 +2331,9 @@
    "hours": "",
    "menu": "",
    "website": "https://www.nycgovparks.org/parks/spring-street-park/monuments/1914",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n2555126629",
@@ -1892,7 +2346,9 @@
    "hours": "We-Su 12:00-18:00",
    "menu": "",
    "website": "https://krausegallery.com",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n2567557154",
@@ -1905,7 +2361,9 @@
    "hours": "",
    "menu": "",
    "website": "http://www.shin-gallery.com",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n2567557185",
@@ -1918,7 +2376,9 @@
    "hours": "We-Su 11:00-18:00",
    "menu": "",
    "website": "https://magentaplains.com/",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n2825233330",
@@ -1931,7 +2391,9 @@
    "hours": "10:00-18:00; Tu off; Th-Sa 10:00-22:00",
    "menu": "",
    "website": "https://www.halldeslumieres.com/",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n4332192139",
@@ -1944,7 +2406,9 @@
    "hours": "",
    "menu": "",
    "website": "https://italianamericanmuseum.org/",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n4706140689",
@@ -1957,7 +2421,9 @@
    "hours": "Mo-Fr 10:00-18:00; Sa 12:00-17:00||Su \"by appointment\"",
    "menu": "",
    "website": "https://voltzclarke.com",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n4771881065",
@@ -1970,7 +2436,9 @@
    "hours": "Tu-Sa 10:00-18:00",
    "menu": "",
    "website": "https://www.morgan-presents.com/",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n4809889324",
@@ -1983,7 +2451,9 @@
    "hours": "Tu-Sa 10:00-18:00",
    "menu": "",
    "website": "https://www.shrine.nyc/nyc",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n5919906699",
@@ -1996,7 +2466,9 @@
    "hours": "",
    "menu": "",
    "website": "https://www.ericfirestonegallery.com",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n6222196494",
@@ -2009,7 +2481,9 @@
    "hours": "Tu-Sa 12:00-18:00; Su 14:00-18:00",
    "menu": "",
    "website": "https://galeriezurcher.com",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n6231514599",
@@ -2022,7 +2496,9 @@
    "hours": "We-Su 12:00-18:00",
    "menu": "",
    "website": "https://fierman.nyc",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n6233607285",
@@ -2035,7 +2511,9 @@
    "hours": "Mo-Sa 11:00-19:00",
    "menu": "",
    "website": "https://conartistnyc.com",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n6233954066",
@@ -2048,7 +2526,9 @@
    "hours": "Tu-Sa 10:00-18:00",
    "menu": "",
    "website": "https://perrotin.com",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n6236928057",
@@ -2061,7 +2541,9 @@
    "hours": "We-Sa 11:00-18:00; Su 12:00-18:00",
    "menu": "",
    "website": "https://bitforms.art",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n6256784609",
@@ -2074,7 +2556,9 @@
    "hours": "We-Su 10:00-18:00",
    "menu": "",
    "website": "https://jamesfuentes.com/",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n6281938397",
@@ -2087,7 +2571,9 @@
    "hours": "Th-Su 12:00-18:00",
    "menu": "",
    "website": "https://www.reenaspaulings.com/",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-r17233746",
@@ -2100,7 +2586,13 @@
    "hours": "",
    "menu": "",
    "website": "https://www.nyc.gov/html/dot/html/infrastructure/manhattan-bridge.shtml",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "Q125050",
+   "wikipedia": "en:Manhattan Bridge",
+   "about": "The Manhattan Bridge is a suspension bridge that crosses the East River in New York City, connecting Lower Manhattan at Canal Street with Downtown Brooklyn at the Flatbush Avenue Extension. Designed by Leon Moisseiff, the bridge has a total length of 6,855 ft (2,089 m). The bridge is one of four vehicular bridges directly connecting Manhattan Island and Long Island; the nearby Brooklyn Bridge is just slightly farther west, while the Queensboro and Williamsburg bridges are to the north.",
+   "aboutUrl": "https://en.wikipedia.org/wiki/Manhattan_Bridge",
+   "aboutSource": "Wikipedia",
+   "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/fe/Manhattan_Bridge%2C_New_York_City%2C_20231001_1051_0959.jpg/330px-Manhattan_Bridge%2C_New_York_City%2C_20231001_1051_0959.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail"
   },
   {
    "id": "osm-n158809984",
@@ -2113,7 +2605,13 @@
    "hours": "",
    "menu": "",
    "website": "",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "Q461572",
+   "wikipedia": "en:SoHo, Manhattan",
+   "about": "SoHo, short for \"South of Houston Street\", is a neighborhood in Lower Manhattan, New York City. Since the 1970s, the neighborhood has been the location of many artists' lofts and art galleries, art installations such as the Wall, and has also been known for its variety of shops ranging from trendy upscale boutiques to national and international chain store locations. The area's history is an archetypal example of inner-city regeneration and gentrification, encompassing socioeconomic, cultural, political, and architectural developments.",
+   "aboutUrl": "https://en.wikipedia.org/wiki/SoHo%2C_Manhattan",
+   "aboutSource": "Wikipedia",
+   "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/34/Cast_Iron_Grand_Crosby_jeh_crop.jpg/330px-Cast_Iron_Grand_Crosby_jeh_crop.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail"
   },
   {
    "id": "osm-n4314829890",
@@ -2126,7 +2624,13 @@
    "hours": "",
    "menu": "",
    "website": "",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "Q6660076",
+   "wikipedia": "en:Liz Christy Garden",
+   "about": "The Liz Christy Bowery Houston Garden, officially started in 1974, is the first and oldest community garden in New York City. Located at the corner of the Bowery and Houston Street in Manhattan and running across to 2nd Avenue, it is now a part of New York City Parks Department.",
+   "aboutUrl": "https://en.wikipedia.org/wiki/Liz_Christy_Garden",
+   "aboutSource": "Wikipedia",
+   "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f9/Liz_christy_garden_0001.jpg/330px-Liz_christy_garden_0001.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail"
   },
   {
    "id": "osm-n4319650089",
@@ -2139,7 +2643,13 @@
    "hours": "",
    "menu": "",
    "website": "",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "Q8348030",
+   "wikipedia": "en:Colonnade Row",
+   "about": "Colonnade Row, also known as LaGrange Terrace, is a group of 1830s row houses on present-day Lafayette Street in the NoHo neighborhood of Manhattan in New York City. They are believed to have been built by Seth Geer, although the project has been attributed to a number of other architects. The buildings' original name comes from the Marquis de Lafayette's estate in France, but the series of nine row houses, of which four remain, owe their existence to John Jacob Astor, who bought the property and whose grandson John Jacob Astor III later lived at No. 424. The remaining buildings are New York City designated landmarks and listed on the National Register of Historic Places under the name LaGrange Terrace. The facades remain standing on Lafayette Street south of Astor Place.",
+   "aboutUrl": "https://en.wikipedia.org/wiki/Colonnade_Row",
+   "aboutSource": "Wikipedia",
+   "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/10/Colonnade_Row_%2851661214380%29.jpg/330px-Colonnade_Row_%2851661214380%29.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail"
   },
   {
    "id": "osm-n5919381986",
@@ -2152,7 +2662,13 @@
    "hours": "",
    "menu": "",
    "website": "",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "Q885252",
+   "wikipedia": "",
+   "about": "Doyers Street is a 200-foot-long (61 m) street in the Chinatown neighborhood of Manhattan in New York City. It is one block long with a sharp bend in the middle. The street runs south and then southeast from a terminus at Pell Street to the intersection of Bowery, Chatham Square, and Division Street. Doyers Street contains several restaurants, barber shops, and hair stylists, as well as the Chinatown branch of the United States Postal Service. The Nom Wah Tea Parlor opened at 13 Doyers Street in 1920, and is still in operation. Longstanding business Ting's Gift Shop at 18 Doyers opened in 1957 and finally closed in mid-2024.",
+   "aboutUrl": "https://en.wikipedia.org/wiki/Doyers_Street",
+   "aboutSource": "Wikipedia",
+   "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/ab/Doyers_Street_-_postcard_-_1898.jpg/330px-Doyers_Street_-_postcard_-_1898.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail"
   },
   {
    "id": "osm-n6052834699",
@@ -2165,7 +2681,9 @@
    "hours": "Mo-Th 09:00-18:00; Fr, Sa 09:00-20:00; Su 09:00-19:00",
    "menu": "",
    "website": "https://www.colorfactory.co/locations/new-york-city",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n4324579690",
@@ -2178,7 +2696,9 @@
    "hours": "",
    "menu": "",
    "website": "",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n4351547190",
@@ -2191,7 +2711,9 @@
    "hours": "",
    "menu": "",
    "website": "",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n4441423089",
@@ -2204,7 +2726,9 @@
    "hours": "",
    "menu": "",
    "website": "",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n4822806225",
@@ -2217,7 +2741,9 @@
    "hours": "Th-Sa 14:00-00:00",
    "menu": "",
    "website": "",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n5215246721",
@@ -2230,7 +2756,9 @@
    "hours": "",
    "menu": "",
    "website": "",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n6100997485",
@@ -2243,7 +2771,9 @@
    "hours": "",
    "menu": "",
    "website": "",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n6938593585",
@@ -2256,7 +2786,9 @@
    "hours": "",
    "menu": "",
    "website": "",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n6949759085",
@@ -2269,7 +2801,9 @@
    "hours": "",
    "menu": "",
    "website": "",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n6949759185",
@@ -2282,7 +2816,9 @@
    "hours": "",
    "menu": "",
    "website": "",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n6949759186",
@@ -2295,7 +2831,9 @@
    "hours": "",
    "menu": "",
    "website": "",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n8146801300",
@@ -2308,7 +2846,9 @@
    "hours": "",
    "menu": "",
    "website": "",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n13640015393",
@@ -2321,7 +2861,9 @@
    "hours": "",
    "menu": "",
    "website": "",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n13746289643",
@@ -2334,7 +2876,9 @@
    "hours": "",
    "menu": "",
    "website": "",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n14178142602",
@@ -2347,7 +2891,9 @@
    "hours": "",
    "menu": "",
    "website": "",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   },
   {
    "id": "osm-n14201849201",
@@ -2360,7 +2906,9 @@
    "hours": "",
    "menu": "",
    "website": "",
-   "source": "osm"
+   "source": "osm",
+   "wikidata": "",
+   "wikipedia": ""
   }
  ]
 }

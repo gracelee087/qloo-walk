@@ -73,6 +73,7 @@ for (const e of pj.elements) {
     id: `osm-${e.type[0]}${e.id}`, type: typeOf(t), title: t.name, enName: t["name:en"] || t.name,
     lng, lat, addr, hours: t.opening_hours || "", menu: (t.cuisine || "").replace(/;/g, ", "),
     website: t.website || "", source: "osm",
+    wikidata: t.wikidata || "", wikipedia: t.wikipedia || "",   // used by scripts/fetch-wiki.mjs
     // places with a Wikidata/website tag are usually the better-known ones
     _rank: (t.wikidata ? 2 : 0) + (t.website ? 1 : 0),
   });
