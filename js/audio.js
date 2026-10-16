@@ -1,73 +1,42 @@
-// ElevenLabs narration playback with per-text caching.
-// If TTS fails (no key / quota / network), the line is SKIPPED silently —
-// the card still shows its text, and silence beats the OS default voice
-// (often a robotic voice) reading the script.
+// Narration with the browser's built-in voice (Web Speech API) — free, runs
+// on the device, no server or key. If the browser has no speech support the
+// line is skipped; the sheet always shows the same text.
 
-const cache = new Map(); // text -> objectURL
-let current = { audio: null, resolve: null };
-let gen = 0; // bumped by stop(): a narration still fetching when stop() ran must never play
-let held = false; // pause() holds NEW clips too — multi-clip sequences must not talk through a pause
+const synth = typeof window !== "undefined" ? window.speechSynthesis : null;
+let current = { resolve: null };
+let held = false; // pause() also holds lines that haven't started yet
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
-export async function playNarration(text, { voiceId } = {}) {
-  const g = gen;
-  let url = cache.get(text);
-  if (!url) {
-    try {
-      const res = await fetch("/api/tts", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ text, voiceId }),
-      });
-      if (!res.ok) throw new Error("tts " + res.status);
-      url = URL.createObjectURL(await res.blob());
-      cache.set(text, url);
-    } catch (e) {
-      console.warn("[audio] TTS unavailable — skipping this line:", e.message);
-      return;
-    }
-  }
-  if (g !== gen) return; // stopped while loading (e.g. a video opened) — stay silent
-  while (held && g === gen) await wait(120); // paused → hold the next clip until resume
-  if (g !== gen) return;
+function englishVoice() {
+  const voices = synth?.getVoices() || [];
+  return voices.find((v) => v.lang === "en-US" && v.localService) || voices.find((v) => v.lang?.startsWith("en")) || null;
+}
+
+export async function playNarration(text) {
+  if (!synth || !text) return;
+  while (held) await wait(120);
+  stop();
   await new Promise((resolve) => {
-    stop();
-    const a = new Audio(url);
-    current = { audio: a, resolve };
-    const done = () => { const r = current.resolve; current = { audio: null, resolve: null }; r && r(); };
-    a.onended = done;
-    a.onerror = done;
-    a.play().catch(done);
+    const u = new SpeechSynthesisUtterance(text);
+    const v = englishVoice();
+    if (v) u.voice = v;
+    u.lang = v?.lang || "en-US";
+    u.rate = 1;
+    current = { resolve };
+    const done = () => { const r = current.resolve; current = { resolve: null }; r && r(); };
+    u.onend = done;
+    u.onerror = done;
+    synth.speak(u);
   });
 }
 
-// Warm the cache in the background so the next stop starts instantly.
-export function prefetch(text, { voiceId } = {}) {
-  if (!text || cache.has(text)) return;
-  fetch("/api/tts", {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ text, voiceId }),
-  })
-    .then((res) => (res.ok ? res.blob() : Promise.reject()))
-    .then((blob) => cache.set(text, URL.createObjectURL(blob)))
-    .catch(() => {});
-}
-
 export function stop() {
-  gen++;
   held = false;
-  if (current.audio) current.audio.pause();
+  synth?.cancel();
   const r = current.resolve;
-  current = { audio: null, resolve: null };
+  current = { resolve: null };
   if (r) r();
 }
-export function pause() {
-  held = true;
-  current.audio && current.audio.pause();
-}
-export function resume() {
-  held = false;
-  current.audio && current.audio.play().catch(() => {});
-}
-export function isPlaying() { return !!current.audio && !current.audio.paused; }
+export function pause() { held = true; synth?.pause(); }
+export function resume() { held = false; synth?.resume(); }
+export function isPlaying() { return !!synth?.speaking && !synth.paused; }

@@ -212,6 +212,10 @@ function photoPlace() {
   }
   return CITY.area;
 }
+const placeKind = (name) => {
+  const p = state.stops.find((s) => nameOf(s) === name);
+  return p ? [TYPE_LABEL[p.type], p.menu].filter(Boolean).join(", ") : "";
+};
 const tagify = (s) => s.replace(/&/g, "and").replace(/[^\p{L}\p{N}]+/gu, "");
 function defaultCaption(place) {
   const tags = [place !== CITY.area && tagify(place), ...CITY.hashtags, "TasteWalk"].filter(Boolean);
@@ -247,7 +251,8 @@ async function onPhoto(e) {
   try {
     const r = await fetch("/api/caption", {
       method: "POST", headers: { "content-type": "application/json" },
-      body: JSON.stringify({ img: dataUrl, place, area: CITY.area, hashtags: CITY.hashtags }),
+      // text only: the photo stays on the device (Gemma free tier may use inputs to improve Google products)
+      body: JSON.stringify({ place, area: CITY.area, kind: placeKind(place), hashtags: CITY.hashtags }),
     });
     const j = await r.json();
     if (r.ok && j.caption && !ta.dataset.edited) ta.value = j.caption;
