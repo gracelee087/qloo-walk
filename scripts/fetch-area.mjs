@@ -1,6 +1,5 @@
-// One-time data build for the walking area (default: NYC SoHo + Lower East Side)
-// from OpenStreetMap via Overpass. Writes:
-//   data/area-streets.json  (walkable graph for routing)
+// One-time data build for the walking area (default: central Berlin around
+// Alexanderplatz) from OpenStreetMap via Overpass. Writes:
 //   data/area-pois.json     (placeholder places until Qloo results replace them)
 //   data/area-subway.json   (subway stations shown on the map)
 // Run: node scripts/fetch-area.mjs
@@ -8,9 +7,9 @@
 import fs from "node:fs";
 
 // south,west,north,east
-const BBOX = process.env.AREA_BBOX || "40.7130,-74.0060,40.7295,-73.9830";
-const AREA = { city: "New York", area: "SoHo & Lower East Side" };
-// ONLY=streets|places|subway reruns a single step (Overpass mirrors are flaky)
+const BBOX = process.env.AREA_BBOX || "52.5050,13.3700,52.5350,13.4300";
+const AREA = { city: "Berlin", area: "Berlin" };
+// ONLY=places|subway reruns a single step (Overpass mirrors are flaky)
 const ONLY = process.env.ONLY;
 const want = (k) => !ONLY || ONLY === k;
 
@@ -29,21 +28,6 @@ async function overpass(q) {
     } catch (e) { console.error(m, "→", e.message); }
   }
   throw new Error("overpass failed");
-}
-
-if (want("streets")) {
-// ---- streets ----
-console.log("Fetching streets…");
-const sj = await overpass(`[out:json][timeout:120];
-(way["highway"~"^(primary|secondary|tertiary|residential|unclassified|pedestrian|living_street|service|footway|path|steps)$"](${BBOX}););
-out geom;`);
-const ways = [];
-for (const w of sj.elements) {
-  if (!w.geometry || w.geometry.length < 2) continue;
-  ways.push(w.geometry.map((g, i) => [w.nodes?.[i] ?? `${w.id}_${i}`, g.lon, g.lat]));
-}
-fs.writeFileSync("data/area-streets.json", JSON.stringify({ ways }));
-console.log("street ways:", ways.length);
 }
 
 if (want("places")) {

@@ -2,14 +2,14 @@
 // guide learns your taste, snap a photo and post it straight to Instagram.
 // Walking area: city.js. Map: map2d.js. Routing: route.js. Voice: audio.js.
 import { playNarration, stop as audioStop, pause as audioPause, resume as audioResume } from "./audio.js";
-import { initMap, setRoute, setStops, markStop, follow, recenter, fitStops } from "./map2d.js";
-import { metersBetween, buildGraph, orderStops, buildWalkPath, cumulative, pointAlong } from "./route.js";
+import { initMap, setRoute, setStops, markStop, follow, recenter, fitStops, setTheme, setBottomInset } from "./map2d.js";
+import { metersBetween, orderStops, fetchWalkPath, cumulative, pointAlong } from "./route.js";
 import { CITY } from "./city.js";
 
 const el = (id) => document.getElementById(id);
 const WALK_SPEED = 12;          // m/s — the demo walk is sped up
 const ARRIVE_M = 35;            // "you're at the stop"
-const WALK_M_PER_MIN = 75;      // ~4.5 km/h, for time estimates
+const WALK_M_PER_MIN = 75;      // ~4.5 km/h, for time estimates when routing is down
 // assumed minutes spent at each kind of stop — only for the "est." times
 const DWELL = { food: 30, culture: 20, attraction: 10, shopping: 10 };
 const TYPE_LABEL = { food: "Food & drink", culture: "Culture", attraction: "Sight", shopping: "Shop" };
@@ -22,7 +22,7 @@ const COURSES = [
 ];
 
 const state = {
-  pois: [], graph: null,
+  pois: [],
   course: null, stops: [], path: [], cum: [], len: 0,
   i: 0, dist: 0, pos: null, atStop: false,
   mode: "sim", running: false, paused: false, gpsWatch: null,
@@ -66,25 +66,30 @@ function pickStops(course) {
   }
   return out;
 }
-function planCourse(course) {
+async function planCourse(course) {
   const stops = orderStops(CITY.start, pickStops(course));
-  const path = buildWalkPath(state.graph, CITY.start, stops);
+  const { path, seconds, fallback } = await fetchWalkPath(CITY.start, stops, WALK_M_PER_MIN);
   const cum = cumulative(path);
   const len = cum[cum.length - 1] || 0;
-  const minutes = len / WALK_M_PER_MIN + stops.reduce((s, p) => s + (DWELL[p.type] || 10), 0);
-  return { course, stops, path, cum, len, minutes };
+  const minutes = seconds / 60 + stops.reduce((s, p) => s + (DWELL[p.type] || 10), 0);
+  return { course, stops, path, cum, len, minutes, fallback };
 }
-function renderCourses() {
+async function renderCourses() {
   el("areaName").textContent = CITY.area;
   const box = el("courses"); box.innerHTML = "";
+  // one route request per course, in turn (the routing server allows 1 request/s)
   for (const c of COURSES) {
-    const plan = planCourse(c);
     const b = document.createElement("button");
-    b.className = "course";
-    b.innerHTML = `<b>${c.name}</b><span>${c.note} · ${plan.stops.length} stops · ${fmtDist(plan.len)}</span><em>≈ ${fmtMin(plan.minutes)}</em>`;
-    b.title = "Estimated time: walking + an assumed stay at each stop";
-    b.addEventListener("click", () => startCourse(plan));
+    b.className = "course"; b.disabled = true;
+    b.innerHTML = `<b>${c.name}</b><span>${c.note} · planning the route…</span>`;
     box.append(b);
+  }
+  for (const [k, c] of COURSES.entries()) {
+    const plan = await planCourse(c), b = box.children[k];
+    b.innerHTML = `<b>${c.name}</b><span>${c.note} · ${plan.stops.length} stops · ${fmtDist(plan.len)}</span><em>≈ ${fmtMin(plan.minutes)}</em>`;
+    b.title = plan.fallback ? "Routing is unavailable — straight-line estimate" : "Estimated time: walking + an assumed stay at each stop";
+    b.disabled = false;
+    b.addEventListener("click", () => startCourse(plan));
   }
 }
 
@@ -190,8 +195,9 @@ function frame(ts) {
   const dt = Math.min((ts - (lastTs || ts)) / 1000, 0.05); lastTs = ts;
   if (state.running && state.mode === "sim" && !state.paused && !state.atStop) {
     state.dist = Math.min(state.dist + WALK_SPEED * dt, state.len);
-    state.pos = pointAlong(state.path, state.cum, state.dist).pos;
-    follow(state.pos[0], state.pos[1]);
+    const at = pointAlong(state.path, state.cum, state.dist);
+    state.pos = at.pos;
+    follow(state.pos[0], state.pos[1], at.heading);
     checkArrival();
     if (state.dist >= state.len && !state.atStop) arrive();
   }
@@ -311,7 +317,12 @@ async function sharePost() {
 }
 
 // ---------- clock + weather chip ----------
-const WX = (c) => (c >= 71 && c <= 77 ? "❄️" : c >= 51 ? "🌧️" : c >= 45 ? "🌫️" : c >= 1 ? "⛅" : "☀️");
+const WX = (c, day) => (c >= 71 && c <= 77 ? "❄️" : c >= 51 ? "🌧️" : c >= 45 ? "🌫️" : c >= 1 ? "⛅" : day ? "☀️" : "🌙");
+// map palette follows the city's real day/night (Open-Meteo is_day); until that answers, guess from the clock
+const guessTheme = () => {
+  const h = +new Date().toLocaleString("en-US", { timeZone: CITY.tz, hour: "numeric", hour12: false });
+  return h >= 7 && h < 19 ? "day" : "night";
+};
 let weather = "";
 function renderEnv() {
   const t = new Date().toLocaleTimeString("en-US", { timeZone: CITY.tz, hour: "2-digit", minute: "2-digit", hour12: false });
@@ -319,10 +330,11 @@ function renderEnv() {
 }
 async function fetchWeather() {
   try {
-    const u = `https://api.open-meteo.com/v1/forecast?latitude=${CITY.start.lat}&longitude=${CITY.start.lng}&current=temperature_2m,weather_code&timezone=${encodeURIComponent(CITY.tz)}`;
+    const u = `https://api.open-meteo.com/v1/forecast?latitude=${CITY.start.lat}&longitude=${CITY.start.lng}&current=temperature_2m,weather_code,is_day&timezone=${encodeURIComponent(CITY.tz)}`;
     const { current: c } = await (await fetch(u)).json();
-    weather = `${WX(c.weather_code)} ${Math.round(c.temperature_2m)}°`;
-  } catch { weather = ""; }
+    weather = `${WX(c.weather_code, c.is_day)} ${Math.round(c.temperature_2m)}°`;
+    setTheme(c.is_day ? "day" : "night");
+  } catch { weather = ""; setTheme(guessTheme()); }
   renderEnv();
 }
 
@@ -347,18 +359,20 @@ function wire() {
   el("saveBtn").addEventListener("click", savePhoto);
   el("postClose").addEventListener("click", () => show("post", false));
   // keep the recenter button just above the sheet
-  new ResizeObserver(([e]) => document.documentElement.style.setProperty("--sheet-h", `${e.contentRect.height + 30}px`)).observe(el("sheet"));
+  // …and the map's visible centre above it, so the walker isn't hidden under the sheet
+  new ResizeObserver(([e]) => {
+    document.documentElement.style.setProperty("--sheet-h", `${e.contentRect.height + 30}px`);
+    setBottomInset(e.contentRect.height + 30);
+  }).observe(el("sheet"));
 }
 
 async function boot() {
   try {
-    const [pois, streets] = await Promise.all([
-      fetch("./data/area-pois.json").then((r) => r.json()),
-      fetch("./data/area-streets.json").then((r) => r.json()),
-    ]);
+    const pois = await fetch("./data/area-pois.json").then((r) => r.json());
     state.pois = pois.pois;
-    state.graph = buildGraph(streets);
-    initMap(el("map"), CITY.start);
+    const theme = guessTheme();
+    document.documentElement.dataset.theme = theme;
+    await initMap(el("map"), CITY.start, theme);
     wire();
     renderCourses();
     renderEnv(); fetchWeather();

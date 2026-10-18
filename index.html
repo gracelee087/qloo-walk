@@ -5,11 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>TasteWalk — Walking Guide That Learns Your Taste</title>
   <meta name="description" content="A walking guide that learns your taste as you walk: tap yes or no on each place, snap a photo and post it straight to Instagram." />
-  <meta name="theme-color" content="#f6f1e7" />
+  <meta name="theme-color" content="#0d1220" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👟</text></svg>" />
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@6.11.2/dist/maplibre-gl.css" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Inter:wght@400;500;600&display=swap" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" />
   <link rel="stylesheet" href="./css/style.css" />
 </head>
 <body>
@@ -36,6 +36,7 @@
       <p class="kicker" id="areaName"></p>
       <h1>Pick a walk</h1>
       <div class="courses" id="courses"></div>
+      <p class="hint">Routes are worked out by the FOSSGIS routing server: the start and stop coordinates of your walk are sent there.</p>
     </div>
 
     <!-- 2. walking -->
@@ -86,7 +87,8 @@
   <script type="importmap">
   {
     "imports": {
-      "leaflet": "https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet-src.esm.js"
+      "maplibre-gl": "https://cdn.jsdelivr.net/npm/maplibre-gl@6.11.2/dist/maplibre-gl.mjs",
+      "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js"
     }
   }
   </script>

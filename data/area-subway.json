@@ -1,102 +1,179 @@
 {
  "stations": [
   {
-   "name": "Canal Street",
-   "en": "Canal Street",
+   "name": "Jannowitzbrücke",
+   "en": "Jannowitzbrücke",
    "lines": [],
-   "lng": -73.999892,
-   "lat": 40.718092
+   "lng": 13.4181732,
+   "lat": 52.5153554
   },
   {
-   "name": "Broadway–Lafayette Street",
-   "en": "Broadway–Lafayette Street",
+   "name": "Rosenthaler Platz",
+   "en": "Rosenthaler Platz",
    "lines": [],
-   "lng": -73.996204,
-   "lat": 40.725297
+   "lng": 13.4011206,
+   "lat": 52.5298999
   },
   {
-   "name": "East Broadway",
-   "en": "East Broadway",
+   "name": "Stadtmitte",
+   "en": "Stadtmitte",
    "lines": [],
-   "lng": -73.990173,
-   "lat": 40.713715
+   "lng": 13.3896554,
+   "lat": 52.5120808
   },
   {
-   "name": "Grand Street",
-   "en": "Grand Street",
+   "name": "Naturkundemuseum",
+   "en": "Naturkundemuseum",
    "lines": [],
-   "lng": -73.9937839,
-   "lat": 40.7181616
+   "lng": 13.3821605,
+   "lat": 52.5312724
   },
   {
-   "name": "Bowery",
-   "en": "Bowery",
+   "name": "U Potsdamer Platz",
+   "en": "U Potsdamer Platz",
    "lines": [],
-   "lng": -73.99372,
-   "lat": 40.7202174
+   "lng": 13.3782147,
+   "lat": 52.5091586
   },
   {
-   "name": "2nd Avenue",
-   "en": "2nd Avenue",
+   "name": "Hauptbahnhof",
+   "en": "Hauptbahnhof",
    "lines": [],
-   "lng": -73.989938,
-   "lat": 40.723402
+   "lng": 13.3701242,
+   "lat": 52.5252819
   },
   {
-   "name": "Essex Street",
-   "en": "Essex Street",
+   "name": "Brandenburger Tor",
+   "en": "Brandenburger Tor",
    "lines": [],
-   "lng": -73.9874236,
-   "lat": 40.7183982
+   "lng": 13.3809897,
+   "lat": 52.5166047
   },
   {
-   "name": "Prince Street",
-   "en": "Prince Street",
+   "name": "Weinmeisterstraße",
+   "en": "Weinmeisterstraße",
    "lines": [],
-   "lng": -73.997702,
-   "lat": 40.724329
+   "lng": 13.4050194,
+   "lat": 52.5254666
   },
   {
-   "name": "Bleecker Street",
-   "en": "Bleecker Street",
+   "name": "U Friedrichstraße",
+   "en": "U Friedrichstraße",
    "lines": [],
-   "lng": -73.9946797,
-   "lat": 40.7259471
+   "lng": 13.3882862,
+   "lat": 52.5202635
   },
   {
-   "name": "Spring Street",
-   "en": "Spring Street",
+   "name": "Anton-Wilhelm-Amo-Straße",
+   "en": "Anton-Wilhelm-Amo-Straße",
    "lines": [],
-   "lng": -73.9971855,
-   "lat": 40.7223025
+   "lng": 13.3850915,
+   "lat": 52.5117915
   },
   {
-   "name": "Canal Street",
-   "en": "Canal Street",
+   "name": "Klosterstraße",
+   "en": "Klosterstraße",
    "lines": [],
-   "lng": -74.0052989,
-   "lat": 40.7218493
+   "lng": 13.4124323,
+   "lat": 52.5172347
   },
   {
-   "name": "Spring Street",
-   "en": "Spring Street",
+   "name": "Schillingstraße",
+   "en": "Schillingstraße",
    "lines": [],
-   "lng": -74.0040137,
-   "lat": 40.7255399
+   "lng": 13.4211125,
+   "lat": 52.52079
   },
   {
-   "name": "Houston Street",
-   "en": "Houston Street",
+   "name": "Spittelmarkt",
+   "en": "Spittelmarkt",
    "lines": [],
-   "lng": -74.0053077,
-   "lat": 40.7285993
+   "lng": 13.4041155,
+   "lat": 52.5112959
   },
   {
-   "name": "Delancey Street",
-   "en": "Delancey Street",
+   "name": "Senefelderplatz",
+   "en": "Senefelderplatz",
    "lines": [],
-   "lng": -73.9881811,
-   "lat": 40.718428
+   "lng": 13.4126861,
+   "lat": 52.5323899
+  },
+  {
+   "name": "Oranienburger Tor",
+   "en": "Oranienburger Tor",
+   "lines": [],
+   "lng": 13.3873583,
+   "lat": 52.5255998
+  },
+  {
+   "name": "Hausvogteiplatz",
+   "en": "Hausvogteiplatz",
+   "lines": [],
+   "lng": 13.395591,
+   "lat": 52.5133502
+  },
+  {
+   "name": "Bundestag",
+   "en": "Bundestag",
+   "lines": [],
+   "lng": 13.3729545,
+   "lat": 52.5201123
+  },
+  {
+   "name": "Alexanderplatz",
+   "en": "Alexanderplatz",
+   "lines": [],
+   "lng": 13.4139082,
+   "lat": 52.5215849
+  },
+  {
+   "name": "Märkisches Museum",
+   "en": "Märkisches Museum",
+   "lines": [],
+   "lng": 13.4101754,
+   "lat": 52.5123348
+  },
+  {
+   "name": "Kochstraße/Checkpoint Charlie",
+   "en": "Kochstraße/Checkpoint Charlie",
+   "lines": [],
+   "lng": 13.3906125,
+   "lat": 52.5060447
+  },
+  {
+   "name": "Rosa-Luxemburg-Platz",
+   "en": "Rosa-Luxemburg-Platz",
+   "lines": [],
+   "lng": 13.4104868,
+   "lat": 52.5276951
+  },
+  {
+   "name": "Heinrich-Heine-Straße",
+   "en": "Heinrich-Heine-Straße",
+   "lines": [],
+   "lng": 13.4160272,
+   "lat": 52.5104484
+  },
+  {
+   "name": "Unter den Linden",
+   "en": "Unter den Linden",
+   "lines": [],
+   "lng": 13.38882,
+   "lat": 52.5169884
+  },
+  {
+   "name": "Rotes Rathaus",
+   "en": "Rotes Rathaus",
+   "lines": [],
+   "lng": 13.4080828,
+   "lat": 52.5188425
+  },
+  {
+   "name": "Museumsinsel",
+   "en": "Museumsinsel",
+   "lines": [],
+   "lng": 13.3988844,
+   "lat": 52.5172626
   }
  ]
 }
