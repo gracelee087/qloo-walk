@@ -5,6 +5,7 @@ import { playNarration, stop as audioStop, pause as audioPause, resume as audioR
 import { initMap, setRoute, setStops, markStop, follow, recenter, fitStops, setTheme, setInsets } from "./map2d.js";
 import { metersBetween, orderStops, fetchWalkPath, cumulative, pointAlong } from "./route.js";
 import { CITY } from "./city.js";
+import { consent, setConsent, track, deleteMyData } from "./insights.js";
 
 const el = (id) => document.getElementById(id);
 const WALK_SPEED = 12;          // m/s — the demo walk is sped up
@@ -69,11 +70,13 @@ function pickStops(course) {
 }
 async function planCourse(course) {
   const stops = orderStops(CITY.start, pickStops(course));
-  const { path, seconds, fallback } = await fetchWalkPath(CITY.start, stops, WALK_M_PER_MIN);
+  const { path, seconds, fallback, waypoints } = await fetchWalkPath(CITY.start, stops, WALK_M_PER_MIN);
   const cum = cumulative(path);
   const len = cum[cum.length - 1] || 0;
   const minutes = seconds / 60 + stops.reduce((s, p) => s + (DWELL[p.type] || 10), 0);
-  return { course, stops, path, cum, len, minutes, fallback };
+  // where the route reaches each stop (on the footway); a big square's centre can be 40 m+ off the path
+  const reach = stops.map((p, k) => waypoints[k + 1] || [p.lng, p.lat]);
+  return { course, stops, path, cum, len, minutes, fallback, reach };
 }
 // course chips along the bottom; tapping one draws its route and fills the sidebar right away
 async function renderCourseBar() {
@@ -225,6 +228,7 @@ function arrive() {
   const p = current();
   state.atStop = true;
   state.lastStop = p;
+  state.arrivedAt = Date.now();     // for the opt-in "time at this stop" insight
   showStop();
   const about = p.about ? ` ${sentences(p.about, 2)}` : (p.menu ? ` They serve ${p.menu}.` : "");
   say(`${nameOf(p)}.${about} Do you like it? Tap Go if it's for you, or Skip.`);
@@ -235,6 +239,7 @@ function judge(p, liked) {
   if (!p) return;
   state.feedback[p.id] = liked ? 1 : 0;
   saveFeedback();
+  track(liked ? "go" : "skip", p, { course: state.course?.id });
   markStop(p.id, liked ? "liked" : "skipped");
   toast(liked ? `○ Saved — more like ${nameOf(p)}` : "✕ Noted — we'll show you less like this");
   if (state.running && p === current()) return advance();
@@ -245,6 +250,8 @@ function advance() {
   audioStop();
   const p = current();
   if (p && state.feedback[p.id] === undefined) markStop(p.id, "visited");
+  if (p && state.atStop && state.arrivedAt) track("dwell", p, { course: state.course?.id, seconds: (Date.now() - state.arrivedAt) / 1000 });
+  state.arrivedAt = null;
   state.i++;
   state.atStop = false;
   if (state.i >= state.stops.length) { show("card", false); return endWalk(); }
@@ -267,7 +274,10 @@ function frame(ts) {
 }
 function checkArrival() {
   const p = current();
-  if (p && !state.atStop && metersBetween(state.pos, [p.lng, p.lat], p.lat) < ARRIVE_M) arrive();
+  if (!p || state.atStop) return;
+  const at = state.sel?.reach?.[state.i];
+  const d = Math.min(metersBetween(state.pos, [p.lng, p.lat], p.lat), at ? metersBetween(state.pos, at, p.lat) : Infinity);
+  if (d < ARRIVE_M) arrive();
 }
 setInterval(updateDistance, 1000);
 
@@ -337,6 +347,8 @@ async function onPhoto(e) {
   try { dataUrl = await compressImage(f); } catch { toast("Couldn't read that photo"); return; }
   const place = photoPlace();
   state.photo = { dataUrl, place };
+  const stop = state.stops.find((s) => nameOf(s) === place);
+  if (stop) track("photo", stop, { course: state.course?.id });
   el("postImg").src = dataUrl;
   const ta = el("postText");
   ta.value = defaultCaption(place); ta.dataset.edited = "";
@@ -424,6 +436,19 @@ function wire() {
   el("sideFold").addEventListener("click", () => setSide(false));
   el("sideOpen").addEventListener("click", () => setSide(true));
   el("listBtn").addEventListener("click", () => document.body.classList.toggle("drawer-open"));
+  // opt-in insights: ask once, changeable + deletable from the sidebar
+  const renderShare = () => { el("shareState").textContent = consent() === "yes" ? "on" : "off"; };
+  const answer = (yes) => { setConsent(yes); show("consent", false); renderShare(); toast(yes ? "Thanks — sharing is on" : "Sharing is off"); };
+  el("consentYes").addEventListener("click", () => answer(true));
+  el("consentNo").addEventListener("click", () => answer(false));
+  el("shareToggle").addEventListener("click", () => answer(consent() !== "yes"));
+  el("deleteData").addEventListener("click", async () => {
+    if (!confirm("Delete everything this device has shared with TasteWalk?")) return;
+    try { const n = await deleteMyData(); toast(`Deleted ${n} record${n === 1 ? "" : "s"} from the server`); }
+    catch { toast("Couldn't reach the server — try again later"); }
+  });
+  renderShare();
+  show("consent", consent() === null);
   el("recenterBtn").addEventListener("click", () => { recenter(); if (state.pos) follow(state.pos[0], state.pos[1]); });
   document.querySelectorAll("#modeToggle button").forEach((b) => b.addEventListener("click", () => setMode(b.dataset.mode)));
   el("postText").addEventListener("input", (e) => { e.target.dataset.edited = "1"; });

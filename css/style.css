@@ -218,3 +218,14 @@ h2 { font-size: 22px; line-height: 1.15; font-weight: 800; letter-spacing: -0.02
 .overlay { position: fixed; inset: 0; z-index: 1000; background: #0d1220; display: grid; place-content: center; text-align: center; gap: 10px; }
 .overlay p { color: var(--muted); margin: 0; }
 .overlay.hidden { display: none; }
+
+/* ---------- consent ---------- */
+.consent {
+  position: fixed; z-index: 800; left: 50%; top: 76px; transform: translateX(-50%); width: min(460px, calc(100% - 16px));
+  padding: 16px 18px; border-radius: 18px; background: var(--glass); backdrop-filter: blur(16px);
+  border: 1px solid var(--line); box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+}
+.consent p { margin: 8px 0 12px; font-size: 13px; color: #d6dcea; }
+.consent .row { display: flex; justify-content: flex-end; gap: 8px; margin: 0; }
+.side-note b { color: var(--ink); }
+.side-note .link { padding: 0; font-size: 12px; }

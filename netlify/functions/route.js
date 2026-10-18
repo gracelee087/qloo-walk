@@ -20,7 +20,9 @@ async function osrmSlot() {
 
 async function viaOsrm(points) {
   await osrmSlot();
-  const r = await fetch(`${OSRM}${points.map((p) => p.join(",")).join(";")}?overview=full&geometries=geojson`, { headers: { "User-Agent": UA } });
+  // the public server sometimes stalls (seen: 27 s) — give up after 12 s and fall back
+  const r = await fetch(`${OSRM}${points.map((p) => p.join(",")).join(";")}?overview=full&geometries=geojson`,
+    { headers: { "User-Agent": UA }, signal: AbortSignal.timeout(12000) });
   if (!r.ok) throw new Error("osrm " + r.status);
   const j = await r.json();
   if (j.code !== "Ok" || !j.routes?.[0]) throw new Error("osrm " + j.code);
@@ -28,12 +30,14 @@ async function viaOsrm(points) {
   return {
     coords: route.geometry.coordinates, meters: route.distance, seconds: route.duration,
     legs: route.legs.map((l) => ({ meters: l.distance, seconds: l.duration })), source: "osrm",
+    // each point moved onto the nearest footway — where the route actually reaches a stop
+    waypoints: j.waypoints.map((w) => w.location),
   };
 }
 
 // one GraphHopper request per ≤5 points; chunks share their end/start point
 async function viaGraphHopper(points, key) {
-  const out = { coords: [], meters: 0, seconds: 0, legs: [], source: "graphhopper" };
+  const out = { coords: [], meters: 0, seconds: 0, legs: [], waypoints: [], source: "graphhopper" };
   for (let i = 0; i < points.length - 1; i += GH_MAX_POINTS - 1) {
     const chunk = points.slice(i, i + GH_MAX_POINTS);
     const q = chunk.map((p) => `point=${p[1]},${p[0]}`).join("&");
@@ -42,6 +46,8 @@ async function viaGraphHopper(points, key) {
     const path = (await r.json()).paths?.[0];
     if (!path) throw new Error("graphhopper no path");
     out.coords.push(...(out.coords.length ? path.points.coordinates.slice(1) : path.points.coordinates));
+    const snapped = path.snapped_waypoints?.coordinates || chunk;
+    out.waypoints.push(...(out.waypoints.length ? snapped.slice(1) : snapped));
     out.meters += path.distance; out.seconds += path.time / 1000;
     // leg split from the instructions: each waypoint ends with a "reached via point" sign (5) or finish (4)
     let leg = { meters: 0, seconds: 0 };

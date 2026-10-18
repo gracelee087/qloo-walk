@@ -41,10 +41,10 @@ export async function fetchWalkPath(start, ordered, walkMPerMin) {
     const r = await fetch("/api/route", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ points: pts }) });
     const j = await r.json();
     if (!r.ok) throw new Error(j.error || r.status);
-    return { path: densify(j.coords, 6), seconds: j.seconds, legs: j.legs, source: j.source, fallback: false };
+    return { path: densify(j.coords, 6), seconds: j.seconds, legs: j.legs, waypoints: j.waypoints || pts, source: j.source, fallback: false };
   } catch {
     const path = densify(pts, 6), cum = cumulative(path);
-    return { path, seconds: (cum[cum.length - 1] / walkMPerMin) * 60, legs: [], source: "straight", fallback: true };
+    return { path, seconds: (cum[cum.length - 1] / walkMPerMin) * 60, legs: [], waypoints: pts, source: "straight", fallback: true };
   }
 }
 

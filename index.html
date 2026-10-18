@@ -55,8 +55,22 @@
       <span class="side-count" id="sideCount">0</span>
     </div>
     <div class="side-list" id="sideList"></div>
-    <p class="hint side-note">Routes are worked out by the FOSSGIS routing server: the start and stop coordinates of your walk are sent there.</p>
+    <p class="hint side-note">
+      Routes are worked out by the FOSSGIS routing server: the start and stop coordinates of your walk are sent there.<br />
+      Sharing walk insights: <b id="shareState">off</b> · <button class="link" id="shareToggle">Change</button> · <button class="link" id="deleteData">Delete my data</button>
+    </p>
   </aside>
+
+  <!-- asked once; nothing is sent before a yes -->
+  <section class="consent" id="consent" hidden>
+    <b>Help TasteWalk learn what walkers like?</b>
+    <p>If you say yes, we store which places you <em>Skip</em> or <em>Go</em>, whether you took a photo there and how long you stayed.
+      No location trail, no name — a random id from this device. Kept in the EU (Supabase, Frankfurt). You can delete it any time.</p>
+    <div class="row">
+      <button class="btn" id="consentNo">No thanks</button>
+      <button class="btn primary" id="consentYes">Yes, share anonymously</button>
+    </div>
+  </section>
   <button class="side-open" id="sideOpen" title="Show list" hidden>‹ Spots</button>
 
   <div class="bottom" id="bottom">
