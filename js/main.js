@@ -25,6 +25,7 @@ const COURSES = [
 
 const state = {
   pois: [], sel: null, peek: null, lastLine: "",
+  chat: [], trip: loadTrip(), tastes: loadTastes(),
   course: null, stops: [], path: [], cum: [], len: 0,
   i: 0, dist: 0, pos: null, atStop: false,
   mode: "sim", running: false, paused: false, gpsWatch: null,
@@ -45,6 +46,9 @@ const nameOf = (p) => p.enName || p.title;
 // ---------- taste feedback (this device only) ----------
 function loadFeedback() {
   try { return JSON.parse(localStorage.getItem("tw-feedback") || "{}"); } catch { return {}; }
+}
+function loadTastes() {
+  try { return { likes: [], dislikes: [], ...JSON.parse(localStorage.getItem("tw-tastes") || "{}") }; } catch { return { likes: [], dislikes: [] }; }
 }
 function saveFeedback() {
   try { localStorage.setItem("tw-feedback", JSON.stringify(state.feedback)); } catch { /* private mode */ }
@@ -258,6 +262,219 @@ function advance() {
   showStop();
 }
 
+// ---------- the buddy: talk while you walk ----------
+// Gemma (/api/chat) only works out what the walker wants; distances, detours and
+// route changes are computed here with real walking routes, so nothing is made up.
+const TOO_FAR_S = 15 * 60;      // a detour longer than this goes to My Trip instead
+const NEAR_M = 300;             // "you're near a place you saved" radius
+
+function setTab(tab) {
+  document.querySelectorAll(".tab").forEach((b) => b.classList.toggle("on", b.dataset.tab === tab));
+  document.querySelectorAll(".pane").forEach((p) => { p.hidden = p.dataset.pane !== tab; });
+  document.body.classList.remove("side-closed"); show("sideOpen", false);
+  if (!matchMedia("(min-width: 900px)").matches) document.body.classList.add("drawer-open");
+  layout();
+  if (tab === "buddy" && !state.chat.length) {
+    addMsg("buddy", `Hey! I'm your walking buddy in ${CITY.area}. Ask me anything, tell me what you're into, or say where you'd like to go.`);
+  }
+  if (tab === "trip") renderTrip();
+}
+
+function addMsg(role, text, action) {
+  if (role !== "typing") state.chat.push({ role, text });
+  const m = document.createElement("div");
+  m.className = `msg ${role}`;
+  m.textContent = text;
+  if (action) {
+    const b = document.createElement("button");
+    b.className = "msg-act"; b.textContent = action.label;
+    b.addEventListener("click", () => { b.disabled = true; action.run(); });
+    m.append(b);
+  }
+  el("msgs").append(m);
+  el("msgs").scrollTop = el("msgs").scrollHeight;
+  return m;
+}
+
+function chatContext() {
+  const from = state.pos || [CITY.start.lng, CITY.start.lat];
+  const onWalk = new Set(state.stops.map((s) => s.id));
+  const nearby = state.pois.filter((p) => !onWalk.has(p.id))
+    .map((p) => ({ p, d: metersBetween(from, [p.lng, p.lat], p.lat) })).sort((a, b) => a.d - b.d).slice(0, 25).map((x) => nameOf(x.p));
+  return {
+    area: CITY.area,
+    current: state.running && state.atStop && current() ? nameOf(current()) : null,
+    next: state.running && current() ? nameOf(current()) : null,
+    walk: state.stops.map(nameOf), nearby,
+  };
+}
+
+async function sendToBuddy(text) {
+  text = text.trim();
+  if (!text) return;
+  addMsg("user", text);
+  const typing = addMsg("typing", "…");
+  let o;
+  try {
+    const r = await fetch("/api/chat", {
+      method: "POST", headers: { "content-type": "application/json" },
+      body: JSON.stringify({ messages: state.chat.slice(-8), context: chatContext() }),
+    });
+    o = await r.json();
+    if (!r.ok) throw new Error(o.error);
+  } catch {
+    typing.remove();
+    addMsg("buddy", "Sorry, I lost my signal for a second — say that again?");
+    return;
+  }
+  typing.remove();
+  learnTastes(o.likes, o.dislikes);
+  if (o.intent === "want_place" && o.place) {
+    addMsg("buddy", o.reply);
+    const follow = await handleWant(o.place);
+    say(`${o.reply} ${follow}`);
+    return;
+  }
+  addMsg("buddy", o.reply);
+  say(o.reply);
+  if (state.running && current() && o.intent === "skip_current") judge(current(), false);
+  if (state.running && current() && o.intent === "like_current") judge(current(), true);
+}
+
+// taste tags from what the walker says — kept on this device (for Qloo signals later)
+function learnTastes(likes = [], dislikes = []) {
+  const t = state.tastes;
+  for (const x of likes) if (!t.likes.includes(x)) t.likes.push(x);
+  for (const x of dislikes) if (!t.dislikes.includes(x)) t.dislikes.push(x);
+  t.likes = t.likes.slice(-30); t.dislikes = t.dislikes.slice(-30);
+  try { localStorage.setItem("tw-tastes", JSON.stringify(t)); } catch { /* private mode */ }
+}
+
+function findPlace(name) {
+  const q = name.toLowerCase().trim();
+  const names = (p) => [p.enName, p.title].filter(Boolean).map((s) => s.toLowerCase());
+  return state.pois.find((p) => names(p).includes(q))
+    || (q.length >= 4 && state.pois.find((p) => names(p).some((n) => n.includes(q) || (n.length >= 4 && q.includes(n)))))
+    || null;
+}
+
+// "I want to go to X": add it to the walk if the detour is short, else save it to My Trip
+async function handleWant(name, { force = false } = {}) {
+  const p = findPlace(name);
+  if (!p) {
+    const msg = `I can't find "${name}" on my map yet, sorry!`;
+    addMsg("buddy", msg);
+    return msg;
+  }
+  const k = state.stops.findIndex((s) => s.id === p.id);
+  if (k >= (state.running ? state.i : 0) && k >= 0) {
+    const msg = `${nameOf(p)} is already on our walk — it's stop ${k + 1}.`;
+    addMsg("buddy", msg);
+    return msg;
+  }
+  const from = state.running ? { lng: state.pos[0], lat: state.pos[1] } : CITY.start;
+  const done = state.running ? state.stops.slice(0, state.i) : [];
+  const rest = state.running ? state.stops.slice(state.i) : state.stops.slice();
+  // cheapest place to slot it in, by straight-line detour
+  const pt = (s) => [s.lng, s.lat];
+  let at = rest.length, best = Infinity;
+  for (let j = 0; j <= rest.length; j++) {
+    const a = j === 0 ? from : rest[j - 1], b = rest[j];
+    const extra = metersBetween(pt(a), pt(p), p.lat) + (b ? metersBetween(pt(p), pt(b), p.lat) - metersBetween(pt(a), pt(b), p.lat) : 0);
+    if (extra < best) { best = extra; at = j; }
+  }
+  const withP = [...rest.slice(0, at), p, ...rest.slice(at)];
+  const thinking = addMsg("typing", "checking the walk…");
+  const [base, next] = await Promise.all([
+    rest.length ? fetchWalkPath(from, rest, WALK_M_PER_MIN) : Promise.resolve({ seconds: 0 }),
+    fetchWalkPath(from, withP, WALK_M_PER_MIN),
+  ]);
+  thinking.remove();
+  const extraMin = Math.max(1, Math.round((next.seconds - base.seconds) / 60));
+  if (!force && next.seconds - base.seconds > TOO_FAR_S) {
+    saveToTrip(p);
+    const msg = `${nameOf(p)} is about ${extraMin} min out of the way, so I saved it to your trip list ⭐ — I'll give you a shout when you're near it.`;
+    addMsg("buddy", msg);
+    return msg;
+  }
+  // re-plan from here: walked stops stay, the rest follows the new route
+  const stops = [...done, ...withP];
+  const reach = [...(state.sel?.reach || []).slice(0, done.length), ...withP.map((s, j) => next.waypoints?.[j + 1] || pt(s))];
+  const cum = cumulative(next.path), len = cum[cum.length - 1] || 0;
+  if (state.running) {
+    Object.assign(state, { stops, path: next.path, cum, len, dist: 0 });
+    state.sel = { ...state.sel, stops, reach };
+    setRoute(next.path);
+    setStops(stops, peek);
+    stops.forEach((s, j) => markStop(s.id, j < state.i ? "visited" : j === state.i ? "next" : state.feedback[s.id] === 1 ? "liked" : state.feedback[s.id] === 0 ? "skipped" : ""));
+    renderList();
+  } else {
+    const minutes = next.seconds / 60 + stops.reduce((s, x) => s + (DWELL[x.type] || 10), 0);
+    selectPlan({ ...state.sel, stops, path: next.path, cum, len, minutes, reach });
+  }
+  removeFromTrip(p.id);
+  const msg = `Added ${nameOf(p)} — about ${extraMin} more min of walking. It's stop ${done.length + at + 1} now.`;
+  addMsg("buddy", msg);
+  return msg;
+}
+
+// ---------- My Trip: places saved for later ----------
+function loadTrip() { try { return JSON.parse(localStorage.getItem("tw-trip") || "[]"); } catch { return []; } }
+function saveTrip() { try { localStorage.setItem("tw-trip", JSON.stringify(state.trip)); } catch { /* private mode */ } renderTrip(); }
+function saveToTrip(p) {
+  if (!state.trip.some((t) => t.id === p.id)) state.trip.push({ id: p.id, name: nameOf(p), lng: p.lng, lat: p.lat, type: p.type, image: p.image || "", alerted: false });
+  saveTrip();
+}
+function removeFromTrip(id) { state.trip = state.trip.filter((t) => t.id !== id); saveTrip(); }
+function renderTrip() {
+  el("tripCount").textContent = state.trip.length;
+  const box = el("tripList"); box.innerHTML = "";
+  if (!state.trip.length) { box.innerHTML = `<p class="hint empty">Places you want to see later land here. Tell your buddy “I want to go to …”.</p>`; return; }
+  const from = state.pos || [CITY.start.lng, CITY.start.lat];
+  for (const t of state.trip) {
+    const row = document.createElement("div");
+    row.className = "spot";
+    row.innerHTML = `${t.image ? `<img src="${t.image}" alt="" loading="lazy" />` : `<i>${TYPE_ICON[t.type] || "📍"}</i>`}
+      <div class="spot-text"><b></b><small>${fmtDist(metersBetween(from, [t.lng, t.lat], t.lat))} away</small></div>
+      <button class="mini yes" title="Add to this walk">＋</button><button class="mini no" title="Remove">✕</button>`;
+    row.querySelector("b").textContent = t.name;
+    row.querySelector(".yes").addEventListener("click", () => { setTab("buddy"); handleWant(t.name, { force: true }); });
+    row.querySelector(".no").addEventListener("click", () => removeFromTrip(t.id));
+    box.append(row);
+  }
+}
+// walking past a saved place → a friendly nudge, once per place
+function checkNearTrip() {
+  if (!state.running || !state.pos) return;
+  for (const t of state.trip) {
+    if (t.alerted) continue;
+    const d = metersBetween(state.pos, [t.lng, t.lat], t.lat);
+    if (d > NEAR_M) continue;
+    t.alerted = true; saveTrip();
+    const msg = `Psst — ${t.name}, the place you wanted to see, is just ${fmtDist(d)} from here. Want to drop by?`;
+    toast(`⭐ ${t.name} is ${fmtDist(d)} away`, 6000);
+    addMsg("buddy", msg, { label: "＋ Add to the walk", run: () => handleWant(t.name, { force: true }) });
+    say(msg);
+  }
+}
+
+// ---------- voice input (browser speech recognition) ----------
+function initMic() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { show("micBtn", false); return; }
+  const rec = new SR();
+  rec.lang = navigator.language || "en-US"; rec.interimResults = false; rec.maxAlternatives = 1;
+  rec.onresult = (e) => sendToBuddy(e.results[0][0].transcript);
+  rec.onend = () => el("micBtn").classList.remove("on");
+  rec.onerror = (e) => { el("micBtn").classList.remove("on"); if (e.error === "not-allowed") toast("🎤 Microphone blocked — allow it in the browser settings"); };
+  el("micBtn").addEventListener("click", () => {
+    if (el("micBtn").classList.contains("on")) return rec.stop();
+    audioStop();
+    try { rec.start(); el("micBtn").classList.add("on"); } catch { /* already listening */ }
+  });
+}
+
+
 // ---------- movement: demo walk + live GPS ----------
 let lastTs = 0;
 function frame(ts) {
@@ -279,7 +496,7 @@ function checkArrival() {
   const d = Math.min(metersBetween(state.pos, [p.lng, p.lat], p.lat), at ? metersBetween(state.pos, at, p.lat) : Infinity);
   if (d < ARRIVE_M) arrive();
 }
-setInterval(updateDistance, 1000);
+setInterval(() => { updateDistance(); checkNearTrip(); }, 1000);
 
 function startGPS() {
   if (!navigator.geolocation) { toast("This browser has no location access."); return; }
@@ -435,7 +652,16 @@ function wire() {
   const setSide = (open) => { document.body.classList.toggle("side-closed", !open); show("sideOpen", !open); layout(); };
   el("sideFold").addEventListener("click", () => setSide(false));
   el("sideOpen").addEventListener("click", () => setSide(true));
-  el("listBtn").addEventListener("click", () => document.body.classList.toggle("drawer-open"));
+  el("listBtn").addEventListener("click", () => {
+    if (document.body.classList.contains("drawer-open")) document.body.classList.remove("drawer-open");
+    else setTab("spots");
+  });
+  // the buddy: tabs, typing, talking
+  document.querySelectorAll(".tab").forEach((b) => b.addEventListener("click", () => setTab(b.dataset.tab)));
+  el("talkBtn").addEventListener("click", () => { setTab("buddy"); el("sayInput").focus(); });
+  el("sayForm").addEventListener("submit", (e) => { e.preventDefault(); const t = el("sayInput").value; el("sayInput").value = ""; sendToBuddy(t); });
+  initMic();
+  renderTrip();
   // opt-in insights: ask once, changeable + deletable from the sidebar
   const renderShare = () => { el("shareState").textContent = consent() === "yes" ? "on" : "off"; };
   const answer = (yes) => { setConsent(yes); show("consent", false); renderShare(); toast(yes ? "Thanks — sharing is on" : "Sharing is off"); };

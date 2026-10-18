@@ -51,10 +51,23 @@
   <aside class="side" id="sidebar">
     <div class="side-head">
       <button class="side-fold" id="sideFold" title="Hide list">›</button>
-      <span id="sideTitle">—</span>
-      <span class="side-count" id="sideCount">0</span>
+      <div class="tabs" role="tablist">
+        <button class="tab on" data-tab="spots"><span id="sideTitle">—</span> <span class="side-count" id="sideCount">0</span></button>
+        <button class="tab" data-tab="buddy">💬 Buddy</button>
+        <button class="tab" data-tab="trip">⭐ Trip <span class="side-count" id="tripCount">0</span></button>
+      </div>
     </div>
-    <div class="side-list" id="sideList"></div>
+    <div class="pane side-list" id="sideList" data-pane="spots"></div>
+    <div class="pane buddy" data-pane="buddy" hidden>
+      <div class="msgs" id="msgs"></div>
+      <form class="say" id="sayForm">
+        <button type="button" class="mic" id="micBtn" title="Talk">🎤</button>
+        <input id="sayInput" placeholder="Talk to your buddy…" autocomplete="off" maxlength="400" />
+        <button class="send" title="Send">➤</button>
+      </form>
+      <p class="hint">Your messages go to Google's Gemma (free tier — Google may use them to improve its products). The 🎤 uses your browser's speech recognition.</p>
+    </div>
+    <div class="pane side-list" id="tripList" data-pane="trip" hidden></div>
     <p class="hint side-note">
       Routes are worked out by the FOSSGIS routing server: the start and stop coordinates of your walk are sent there.<br />
       Sharing walk insights: <b id="shareState">off</b> · <button class="link" id="shareToggle">Change</button> · <button class="link" id="deleteData">Delete my data</button>
@@ -80,6 +93,7 @@
       <button class="btn" id="pauseBtn" disabled>Pause</button>
       <button class="btn" id="prevBtn" disabled title="Replay what the guide just said">‹ Prev</button>
       <button class="btn" id="nextBtn" disabled title="Skip ahead to the next stop">Next ›</button>
+      <button class="btn talk" id="talkBtn" title="Talk to your buddy">💬 Talk</button>
       <button class="btn mob-only" id="listBtn" title="Places on this walk">📋</button>
       <button class="btn" id="snapBtn" title="Snap a photo">📷</button>
       <button class="btn" id="resetBtn" title="Back to the start">↺</button>
