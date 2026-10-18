@@ -2,7 +2,7 @@
 // guide learns your taste, snap a photo and post it straight to Instagram.
 // Walking area: city.js. Map: map2d.js. Routing: route.js. Voice: audio.js.
 import { playNarration, stop as audioStop, pause as audioPause, resume as audioResume } from "./audio.js";
-import { initMap, setRoute, setStops, markStop, follow, recenter, fitStops, setTheme, setBottomInset } from "./map2d.js";
+import { initMap, setRoute, setStops, markStop, follow, recenter, fitStops, setTheme, setInsets } from "./map2d.js";
 import { metersBetween, orderStops, fetchWalkPath, cumulative, pointAlong } from "./route.js";
 import { CITY } from "./city.js";
 
@@ -13,16 +13,17 @@ const WALK_M_PER_MIN = 75;      // ~4.5 km/h, for time estimates when routing is
 // assumed minutes spent at each kind of stop — only for the "est." times
 const DWELL = { food: 30, culture: 20, attraction: 10, shopping: 10 };
 const TYPE_LABEL = { food: "Food & drink", culture: "Culture", attraction: "Sight", shopping: "Shop" };
+const TYPE_ICON = { food: "🍽️", culture: "🏛️", attraction: "📸", shopping: "🛍️" };
 
 // stop picks are placeholders until Qloo ranks places for the walker's taste
 const COURSES = [
-  { id: "must", name: "Must See", note: "Landmarks and museums", n: 8, pick: (p) => p.type === "attraction" || p.type === "culture" },
-  { id: "classic", name: "Classic", note: "A bit of everything", n: 6, pick: () => true, mix: true },
-  { id: "slow", name: "Slow Down", note: "Fewer stops, food and coffee", n: 4, pick: (p) => p.type === "food" },
+  { id: "must", icon: "⭐", name: "Must See", note: "Landmarks and museums", n: 8, pick: (p) => p.type === "attraction" || p.type === "culture" },
+  { id: "classic", icon: "🧭", name: "Classic", note: "A bit of everything", n: 6, pick: () => true, mix: true },
+  { id: "slow", icon: "☕", name: "Slow Down", note: "Fewer stops, food and coffee", n: 4, pick: (p) => p.type === "food" },
 ];
 
 const state = {
-  pois: [],
+  pois: [], sel: null, peek: null, lastLine: "",
   course: null, stops: [], path: [], cum: [], len: 0,
   i: 0, dist: 0, pos: null, atStop: false,
   mode: "sim", running: false, paused: false, gpsWatch: null,
@@ -74,45 +75,106 @@ async function planCourse(course) {
   const minutes = seconds / 60 + stops.reduce((s, p) => s + (DWELL[p.type] || 10), 0);
   return { course, stops, path, cum, len, minutes, fallback };
 }
-async function renderCourses() {
-  el("areaName").textContent = CITY.area;
-  const box = el("courses"); box.innerHTML = "";
-  // one route request per course, in turn (the routing server allows 1 request/s)
+// course chips along the bottom; tapping one draws its route and fills the sidebar right away
+async function renderCourseBar() {
+  const bar = el("courseBar"); bar.innerHTML = "";
   for (const c of COURSES) {
     const b = document.createElement("button");
-    b.className = "course"; b.disabled = true;
-    b.innerHTML = `<b>${c.name}</b><span>${c.note} · planning the route…</span>`;
-    box.append(b);
+    b.className = "chip-course"; b.disabled = true; b.dataset.id = c.id;
+    b.innerHTML = `<b>${c.icon} ${c.name}</b><span>planning…</span>`;
+    bar.append(b);
   }
+  // one route request per course, in turn (the routing server allows 1 request/s)
   for (const [k, c] of COURSES.entries()) {
-    const plan = await planCourse(c), b = box.children[k];
-    b.innerHTML = `<b>${c.name}</b><span>${c.note} · ${plan.stops.length} stops · ${fmtDist(plan.len)}</span><em>≈ ${fmtMin(plan.minutes)}</em>`;
-    b.title = plan.fallback ? "Routing is unavailable — straight-line estimate" : "Estimated time: walking + an assumed stay at each stop";
+    const plan = await planCourse(c), b = bar.children[k];
+    b.innerHTML = `<b>${c.icon} ${c.name}</b><span>${plan.stops.length} stops · ${fmtDist(plan.len)} · ≈ ${fmtMin(plan.minutes)}</span>`;
+    b.title = plan.fallback ? "Routing is unavailable — straight-line estimate" : `${c.note} — walking time + an assumed stay at each stop`;
     b.disabled = false;
-    b.addEventListener("click", () => startCourse(plan));
+    b.addEventListener("click", () => selectPlan(plan));
+    if (k === 0) selectPlan(plan);
   }
+}
+function selectPlan(plan) {
+  if (state.running) endWalk(true);
+  state.sel = plan;
+  Object.assign(state, { course: plan.course, stops: plan.stops, path: plan.path, cum: plan.cum, len: plan.len, i: 0, dist: 0, atStop: false, peek: null });
+  state.pos = [CITY.start.lng, CITY.start.lat];
+  follow(state.pos[0], state.pos[1]);
+  setRoute(plan.path);
+  setStops(plan.stops, peek);
+  for (const p of plan.stops) if (state.feedback[p.id] !== undefined) markStop(p.id, state.feedback[p.id] ? "liked" : "skipped");
+  fitStops(CITY.start);
+  document.querySelectorAll(".chip-course").forEach((b) => b.classList.toggle("on", b.dataset.id === plan.course.id));
+  show("card", false);
+  renderList();
+  renderDock();
+}
+
+// ---------- sidebar: the course's places ----------
+function rowState(p, k) {
+  if (state.running && k === state.i) return "now";
+  if (state.feedback[p.id] === 1) return "liked";
+  if (state.feedback[p.id] === 0) return "skipped";
+  return state.running && k < state.i ? "visited" : "";
+}
+function renderList() {
+  const c = state.course;
+  el("sideTitle").textContent = c ? `${c.icon} ${c.name}` : "—";
+  el("sideCount").textContent = state.stops.length;
+  const list = el("sideList"); list.innerHTML = "";
+  state.stops.forEach((p, k) => {
+    const row = document.createElement("div");
+    row.className = `spot ${rowState(p, k)}`.trim(); row.dataset.id = p.id;
+    row.innerHTML = `${p.image ? `<img src="${p.image}" alt="" loading="lazy" />` : `<i>${TYPE_ICON[p.type] || "📍"}</i>`}
+      <div class="spot-text"><b></b><small><span class="dist"></span> · ${TYPE_LABEL[p.type] || "Place"}</small></div>
+      <button class="mini no" title="Skip — not for me">✕</button><button class="mini yes" title="Go — I like this">○</button>`;
+    row.querySelector("b").textContent = `${k + 1}. ${nameOf(p)}`;
+    row.addEventListener("click", () => peek(p.id));
+    row.querySelector(".no").addEventListener("click", (e) => { e.stopPropagation(); judge(p, false); });
+    row.querySelector(".yes").addEventListener("click", (e) => { e.stopPropagation(); judge(p, true); });
+    list.append(row);
+  });
+  updateDistance();
 }
 
 // ---------- the walk ----------
-function startCourse(plan) {
-  Object.assign(state, { course: plan.course, stops: plan.stops, path: plan.path, cum: plan.cum, len: plan.len, i: 0, dist: 0, atStop: false, running: true, paused: false });
+function startWalk() {
+  if (!state.sel) return;
+  Object.assign(state, { i: 0, dist: 0, atStop: false, running: true, paused: false, peek: null });
   state.pos = [CITY.start.lng, CITY.start.lat];
-  setRoute(plan.path);
-  setStops(plan.stops, peek);
-  fitStops(CITY.start);
   recenter();
-  show("viewPick", false); show("viewWalk"); show("recenterBtn");
-  el("pauseBtn").textContent = "Pause";
   showStop();
+  renderDock();
   if (state.mode === "gps") startGPS();
-  playNarration(`Welcome to ${CITY.area}. Follow the red line. At each stop, tell me if it's for you.`);
+  say(`Welcome to ${CITY.area}. Follow the yellow line. At each stop, tell me if it's for you.`);
 }
+// end the walk; quiet = switching course / reset, no summary
+function endWalk(quiet = false) {
+  state.running = false; state.paused = false; state.atStop = false;
+  stopGPS(); audioStop();
+  if (!quiet) {
+    const liked = state.stops.filter((s) => state.feedback[s.id] === 1).length;
+    toast(`Walk done — you liked ${liked} of ${state.stops.length} stops`, 5000);
+    say(`That's the walk. You liked ${liked} of ${state.stops.length} stops.`);
+  }
+  renderList();
+  renderDock();
+}
+function renderDock() {
+  el("startBtn").disabled = !state.sel;
+  el("startBtn").textContent = state.running ? "■ End walk" : "▶ Start Walk";
+  for (const id of ["pauseBtn", "nextBtn"]) el(id).disabled = !state.running;
+  el("prevBtn").disabled = !state.lastLine;
+  el("pauseBtn").textContent = state.paused ? "Resume" : "Pause";
+}
+// narration + remember it for ‹ Prev
+function say(text) { state.lastLine = text; el("prevBtn").disabled = false; playNarration(text); }
 
 function current() { return state.stops[state.i]; }
-const shown = () => state.peek || current();      // the place on the sheet right now
+const shown = () => state.peek || current();      // the place on the card right now
 const sentences = (t, n) => (t.match(/[^.!?]+[.!?]+(\s|$)/g) || [t]).slice(0, n).join("").trim();
 
-// fill the sheet with one place: photo, name, description + its source
+// fill the card with one place: photo, name, description + its source
 function renderPlace(p, kicker) {
   el("stopIdx").textContent = kicker;
   el("stopName").textContent = nameOf(p);
@@ -125,6 +187,7 @@ function renderPlace(p, kicker) {
     src.innerHTML = `${facts ? facts + " · " : ""}From <a href="${p.aboutUrl}" target="_blank" rel="noopener">${p.aboutSource}</a>`;
     src.hidden = false;
   } else src.hidden = true;
+  show("card");
   updateDistance();
 }
 function showStop() {
@@ -133,22 +196,29 @@ function showStop() {
   state.peek = null; show("backBtn", false);
   markStop(p.id, "next");
   renderPlace(p, `${state.atStop ? "Stop" : "Next"} ${state.i + 1} of ${state.stops.length}`);
+  renderList();
 }
-// tap a stop on the map → read about it without leaving the walk
+// tap a stop on the map or in the list → read about it (before or during the walk)
 function peek(id) {
   const k = state.stops.findIndex((s) => s.id === id);
   if (k < 0) return;
-  if (k === state.i) return showStop();
+  if (state.running && k === state.i) return showStop();
   state.peek = state.stops[k];
-  show("backBtn");
+  show("backBtn", state.running);
   renderPlace(state.peek, `Stop ${k + 1} of ${state.stops.length}`);
 }
 function updateDistance() {
+  const from = state.pos || [CITY.start.lng, CITY.start.lat];
   const p = shown();
-  if (!p || !state.pos) return;
-  const label = TYPE_LABEL[p.type] || "Place";
-  el("stopMeta").textContent = !state.peek && state.atStop ? `${label} · you're here`
-    : `${label} · ${fmtDist(metersBetween(state.pos, [p.lng, p.lat], p.lat))}`;
+  if (p && !el("card").hidden) {
+    const label = TYPE_LABEL[p.type] || "Place";
+    el("stopMeta").textContent = !state.peek && state.atStop ? `${label} · you're here`
+      : `${label} · ${fmtDist(metersBetween(from, [p.lng, p.lat], p.lat))}`;
+  }
+  el("sideList").querySelectorAll(".spot").forEach((row, k) => {
+    const s = state.stops[k];
+    if (s) row.querySelector(".dist").textContent = fmtDist(metersBetween(from, [s.lng, s.lat], s.lat));
+  });
 }
 
 function arrive() {
@@ -157,19 +227,19 @@ function arrive() {
   state.lastStop = p;
   showStop();
   const about = p.about ? ` ${sentences(p.about, 2)}` : (p.menu ? ` They serve ${p.menu}.` : "");
-  playNarration(`${nameOf(p)}.${about} Do you like it? Tap the circle for yes, the cross for no.`);
+  say(`${nameOf(p)}.${about} Do you like it? Tap Go if it's for you, or Skip.`);
 }
 
-// ✕ / ○ — record taste for the place on the sheet; at the current stop, move on
-function judge(liked) {
-  const p = shown();
+// ✕ Skip / ○ Go — record taste for a place; for the stop you're walking to, move on
+function judge(p, liked) {
   if (!p) return;
   state.feedback[p.id] = liked ? 1 : 0;
   saveFeedback();
   markStop(p.id, liked ? "liked" : "skipped");
   toast(liked ? `○ Saved — more like ${nameOf(p)}` : "✕ Noted — we'll show you less like this");
-  if (state.peek) return showStop();
-  advance();
+  if (state.running && p === current()) return advance();
+  if (state.running && state.peek) return showStop();
+  renderList();
 }
 function advance() {
   audioStop();
@@ -177,16 +247,8 @@ function advance() {
   if (p && state.feedback[p.id] === undefined) markStop(p.id, "visited");
   state.i++;
   state.atStop = false;
-  if (state.i >= state.stops.length) return finish();
+  if (state.i >= state.stops.length) { show("card", false); return endWalk(); }
   showStop();
-}
-function finish() {
-  state.running = false;
-  stopGPS();
-  const liked = state.stops.filter((s) => state.feedback[s.id] === 1).length;
-  toast(`Walk done — you liked ${liked} of ${state.stops.length} stops`, 5000);
-  playNarration(`That's the walk. You liked ${liked} of ${state.stops.length} stops.`);
-  show("viewWalk", false); show("viewPick"); show("recenterBtn", false);
 }
 
 // ---------- movement: demo walk + live GPS ----------
@@ -207,7 +269,7 @@ function checkArrival() {
   const p = current();
   if (p && !state.atStop && metersBetween(state.pos, [p.lng, p.lat], p.lat) < ARRIVE_M) arrive();
 }
-setInterval(() => { if (state.running) updateDistance(); }, 1000);
+setInterval(updateDistance, 1000);
 
 function startGPS() {
   if (!navigator.geolocation) { toast("This browser has no location access."); return; }
@@ -340,17 +402,28 @@ async function fetchWeather() {
 
 // ---------- wiring + boot ----------
 function wire() {
-  el("yesBtn").addEventListener("click", () => judge(true));
-  el("noBtn").addEventListener("click", () => judge(false));
-  el("camBtn").addEventListener("click", () => { el("camInput").value = ""; el("camInput").click(); });
+  el("yesBtn").addEventListener("click", () => judge(shown(), true));
+  el("noBtn").addEventListener("click", () => judge(shown(), false));
+  const snap = () => { el("camInput").value = ""; el("camInput").click(); };
+  el("camBtn").addEventListener("click", snap);
+  el("snapBtn").addEventListener("click", snap);
   el("camInput").addEventListener("change", onPhoto);
+  el("startBtn").addEventListener("click", () => (state.running ? endWalk() : startWalk()));
   el("pauseBtn").addEventListener("click", () => {
     state.paused = !state.paused;
-    el("pauseBtn").textContent = state.paused ? "Resume" : "Pause";
     state.paused ? audioPause() : audioResume();
+    renderDock();
   });
-  el("endBtn").addEventListener("click", finish);
+  el("prevBtn").addEventListener("click", () => playNarration(state.lastLine));
+  el("nextBtn").addEventListener("click", advance);
+  el("resetBtn").addEventListener("click", () => state.sel && selectPlan(state.sel));
   el("backBtn").addEventListener("click", showStop);
+  el("cardClose").addEventListener("click", () => { state.peek = null; show("card", false); });
+  // sidebar: fold away on desktop, slide up as a drawer on phones
+  const setSide = (open) => { document.body.classList.toggle("side-closed", !open); show("sideOpen", !open); layout(); };
+  el("sideFold").addEventListener("click", () => setSide(false));
+  el("sideOpen").addEventListener("click", () => setSide(true));
+  el("listBtn").addEventListener("click", () => document.body.classList.toggle("drawer-open"));
   el("recenterBtn").addEventListener("click", () => { recenter(); if (state.pos) follow(state.pos[0], state.pos[1]); });
   document.querySelectorAll("#modeToggle button").forEach((b) => b.addEventListener("click", () => setMode(b.dataset.mode)));
   el("postText").addEventListener("input", (e) => { e.target.dataset.edited = "1"; });
@@ -358,12 +431,17 @@ function wire() {
   el("copyBtn").addEventListener("click", async () => toast((await copyCaption()) ? "Caption copied" : "Select the text to copy it"));
   el("saveBtn").addEventListener("click", savePhoto);
   el("postClose").addEventListener("click", () => show("post", false));
-  // keep the recenter button just above the sheet
-  // …and the map's visible centre above it, so the walker isn't hidden under the sheet
-  new ResizeObserver(([e]) => {
-    document.documentElement.style.setProperty("--sheet-h", `${e.contentRect.height + 30}px`);
-    setBottomInset(e.contentRect.height + 30);
-  }).observe(el("sheet"));
+  new ResizeObserver(layout).observe(el("bottom"));
+  window.addEventListener("resize", layout);
+}
+// keep the map's visible centre clear of the dock (and the sidebar on desktop),
+// so the walker is never hidden under a panel
+function layout() {
+  const bottom = el("bottom").offsetHeight + 24;
+  const wide = matchMedia("(min-width: 900px)").matches;
+  const right = wide && !document.body.classList.contains("side-closed") ? el("sidebar").offsetWidth + 24 : 0;
+  document.documentElement.style.setProperty("--bottom-h", `${bottom}px`);
+  setInsets({ bottom, right });
 }
 
 async function boot() {
@@ -374,7 +452,8 @@ async function boot() {
     document.documentElement.dataset.theme = theme;
     await initMap(el("map"), CITY.start, theme);
     wire();
-    renderCourses();
+    layout();
+    renderCourseBar();
     renderEnv(); fetchWeather();
     setInterval(renderEnv, 30000); setInterval(fetchWeather, 600000);
     el("overlay").classList.add("hidden");

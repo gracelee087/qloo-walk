@@ -3,12 +3,12 @@
 // Berlin's real time. Street labels show the real street name (OSM `name`).
 const PALETTE = {
   night: {
-    bg: "#0d1220", park: "#11251f", water: "#0a2742", building: "#161d2e", buildingLine: "#222c44",
+    bg: "#0d1220", park: "#11251f", water: "#0a2742", building: "#182033", buildingTop: "#2c3858", buildingEdge: "#ffb547",
     minor: "#1f2840", major: "#2c3756", casing: "#0a0f1a", path: "#2b3550", rail: "#2a3350",
     label: "#a9b8d6", labelHalo: "#0d1220", place: "#d7def0", waterLabel: "#5f8fbf",
   },
   day: {
-    bg: "#f1ede4", park: "#cfe2bf", water: "#a7cae6", building: "#e2dccf", buildingLine: "#d2c9b8",
+    bg: "#f1ede4", park: "#cfe2bf", water: "#a7cae6", building: "#ddd5c6", buildingTop: "#f6f1e8", buildingEdge: "#c9b48c",
     minor: "#ffffff", major: "#ffe7a8", casing: "#d8d0bf", path: "#cbbfa6", rail: "#b9b2a5",
     label: "#5a5448", labelHalo: "#ffffff", place: "#3b372f", waterLabel: "#3f74a8",
   },
@@ -27,8 +27,6 @@ const LAYERS = [
   { id: "park", type: "fill", "source-layer": "park", paint: (p) => ({ "fill-color": p.park }) },
   { id: "water", type: "fill", "source-layer": "water", paint: (p) => ({ "fill-color": p.water }) },
   { id: "waterway", type: "line", "source-layer": "waterway", paint: (p) => ({ "line-color": p.water, "line-width": z([12, 1, 18, 6]) }) },
-  { id: "building", type: "fill", "source-layer": "building", minzoom: 14,
-    paint: (p) => ({ "fill-color": p.building, "fill-outline-color": p.buildingLine }) },
   { id: "rail", type: "line", "source-layer": "transportation", filter: ["match", ["get", "class"], ["rail", "transit"], true, false],
     paint: (p) => ({ "line-color": p.rail, "line-width": z([12, 0.6, 18, 2]), "line-dasharray": [3, 2] }) },
   { id: "path", type: "line", "source-layer": "transportation", minzoom: 14, filter: ["match", ["get", "class"], ["path", "track"], true, false],
@@ -39,6 +37,16 @@ const LAYERS = [
   { id: "road", type: "line", "source-layer": "transportation", filter: ["match", ["get", "class"], ["motorway", "trunk", "primary", "secondary", "tertiary", "minor", "service"], true, false],
     layout: { "line-cap": "round", "line-join": "round" },
     paint: (p) => ({ "line-color": ["case", MAJOR, p.major, p.minor], "line-width": z([12, ["*", ROAD, 2], 18, ["*", ROAD, 30]]) }) },
+  // buildings at their real height (OpenMapTiles render_height); a soft amber line glows at each footprint's foot
+  { id: "building-edge", type: "line", "source-layer": "building", minzoom: 14,
+    paint: (p) => ({ "line-color": p.buildingEdge, "line-width": z([14, 0.5, 18, 3]), "line-blur": 1.5, "line-opacity": 0.55 }) },
+  { id: "building-3d", type: "fill-extrusion", "source-layer": "building", minzoom: 14,
+    paint: (p) => ({
+      "fill-extrusion-color": ["interpolate", ["linear"], ["coalesce", ["get", "render_height"], 0], 0, p.building, 60, p.buildingTop],
+      "fill-extrusion-height": ["coalesce", ["get", "render_height"], 0],
+      "fill-extrusion-base": ["coalesce", ["get", "render_min_height"], 0],
+      "fill-extrusion-opacity": 0.92, "fill-extrusion-vertical-gradient": true,
+    }) },
   { id: "water-name", type: "symbol", "source-layer": "water_name",
     layout: { "text-field": ["get", "name"], "text-font": ["Noto Sans Italic"], "text-size": 13 },
     paint: (p) => ({ "text-color": p.waterLabel, "text-halo-color": p.labelHalo, "text-halo-width": 1.2 }) },

@@ -6,7 +6,7 @@ import * as THREE from "three";
 import { buildStyle, applyTheme } from "./mapstyle.js";
 import { bearingTo } from "./route.js";
 
-const PITCH = 55, WALK_ZOOM = 17.5;
+const PITCH = 55, WALK_ZOOM = 16.8;
 const S = { map: null, theme: "night", stops: new Map(), me: null, label: null, following: true, lastPan: 0, routeData: null };
 
 export function initMap(container, center, theme = "night") {
@@ -40,7 +40,8 @@ export function initMap(container, center, theme = "night") {
 const line = (coords) => ({ type: "Feature", properties: {}, geometry: { type: "LineString", coordinates: coords } });
 
 export function setTheme(theme) {
-  if (theme === S.theme || !S.map?.isStyleLoaded()) return;
+  // called only after initMap resolved (style loaded); isStyleLoaded() is false while tiles stream in
+  if (theme === S.theme || !S.map) return;
   S.theme = theme;
   applyTheme(S.map, theme);
   document.documentElement.dataset.theme = theme;
@@ -92,8 +93,8 @@ export function follow(lng, lat, heading) {
 
 export function recenter() { S.following = true; S.lastPan = 0; }
 
-// keep the walker in the visible part of the map, above the bottom sheet
-export function setBottomInset(px) { S.map?.setPadding({ top: 70, bottom: px, left: 0, right: 0 }); }
+// keep the walker in the visible part of the map, clear of the dock and sidebar
+export function setInsets({ bottom = 0, right = 0 }) { S.map?.setPadding({ top: 70, bottom, left: 0, right }); }
 
 export function fitStops(start) {
   const pts = [...S.stops.values()].map((m) => m.getLngLat().toArray());
@@ -160,6 +161,7 @@ function avatarLayer() {
         .multiply(new THREE.Matrix4().makeRotationY(Math.PI - (S.me.heading * Math.PI) / 180));
       camera.projectionMatrix = new THREE.Matrix4().fromArray(args.defaultProjectionData.mainMatrix).multiply(model);
       renderer.resetState();
+      renderer.clearDepth();      // walker shows through buildings (Myeongdong 3D's x-ray), still depth-sorted within itself
       renderer.render(scene, camera);
       S.map.triggerRepaint();
     },

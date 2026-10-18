@@ -26,39 +26,51 @@
     </div>
   </header>
 
-  <button class="recenter" id="recenterBtn" title="Follow me" hidden>◎</button>
+  <button class="recenter" id="recenterBtn" title="Follow me">◎</button>
 
-  <section class="sheet" id="sheet">
-    <div class="grip"></div>
-
-    <!-- 1. choose a walk -->
-    <div class="view" id="viewPick">
-      <p class="kicker" id="areaName"></p>
-      <h1>Pick a walk</h1>
-      <div class="courses" id="courses"></div>
-      <p class="hint">Routes are worked out by the FOSSGIS routing server: the start and stop coordinates of your walk are sent there.</p>
-    </div>
-
-    <!-- 2. walking -->
-    <div class="view" id="viewWalk" hidden>
+  <!-- the place you're at / tapped — floats left on desktop, above the dock on phones -->
+  <section class="card" id="card" hidden>
+    <button class="card-close" id="cardClose" title="Close">✕</button>
+    <img class="stop-img" id="stopImg" alt="" hidden />
+    <div class="card-body">
       <button class="link back" id="backBtn" hidden>← Back to your next stop</button>
-      <img class="stop-img" id="stopImg" alt="" hidden />
       <p class="kicker"><span id="stopIdx"></span> · <span id="stopMeta"></span></p>
       <h2 id="stopName"></h2>
       <p class="blurb" id="stopBlurb"></p>
       <p class="src" id="stopSrc" hidden></p>
       <p class="why" id="stopWhy" hidden></p>
       <div class="actions">
-        <button class="act no" id="noBtn" title="Not for me">✕</button>
+        <button class="act no" id="noBtn" title="Skip — not for me">✕<small>Skip</small></button>
         <button class="act cam" id="camBtn" title="Snap &amp; post">📷</button>
-        <button class="act yes" id="yesBtn" title="I like this">○</button>
-      </div>
-      <div class="controls">
-        <button class="link" id="pauseBtn">Pause</button>
-        <button class="link" id="endBtn">End walk</button>
+        <button class="act yes" id="yesBtn" title="Go — I like this">○<small>Go</small></button>
       </div>
     </div>
   </section>
+
+  <!-- the course's places, in walking order -->
+  <aside class="side" id="sidebar">
+    <div class="side-head">
+      <button class="side-fold" id="sideFold" title="Hide list">›</button>
+      <span id="sideTitle">—</span>
+      <span class="side-count" id="sideCount">0</span>
+    </div>
+    <div class="side-list" id="sideList"></div>
+    <p class="hint side-note">Routes are worked out by the FOSSGIS routing server: the start and stop coordinates of your walk are sent there.</p>
+  </aside>
+  <button class="side-open" id="sideOpen" title="Show list" hidden>‹ Spots</button>
+
+  <div class="bottom" id="bottom">
+    <div class="course-bar" id="courseBar"></div>
+    <div class="dock">
+      <button class="btn primary" id="startBtn" disabled>▶ Start Walk</button>
+      <button class="btn" id="pauseBtn" disabled>Pause</button>
+      <button class="btn" id="prevBtn" disabled title="Replay what the guide just said">‹ Prev</button>
+      <button class="btn" id="nextBtn" disabled title="Skip ahead to the next stop">Next ›</button>
+      <button class="btn mob-only" id="listBtn" title="Places on this walk">📋</button>
+      <button class="btn" id="snapBtn" title="Snap a photo">📷</button>
+      <button class="btn" id="resetBtn" title="Back to the start">↺</button>
+    </div>
+  </div>
 
   <!-- snap & post -->
   <div class="modal" id="post" hidden>
