@@ -52,7 +52,6 @@ h2 { font-size: 22px; line-height: 1.15; font-weight: 800; letter-spacing: -0.02
 .blurb { margin: 0 0 8px; color: #d6dcea; font-size: 14px; }
 .src { margin: 0 0 8px; font-size: 12px; color: var(--muted); }
 .src a { color: var(--muted); }
-.ig { display: inline-block; margin: 0 0 10px; padding: 6px 12px; border-radius: 999px; background: var(--glass-2); color: var(--ink); font-size: 13px; font-weight: 700; text-decoration: none; }
 .back { display: block; margin: 0 0 6px; padding-left: 0; }
 .why { margin: 0 0 8px; font-size: 13px; color: var(--muted); font-style: italic; }
 .link { border: 0; background: none; padding: 6px 4px; font-size: 13px; color: var(--muted); text-decoration: underline; text-underline-offset: 3px; }
@@ -77,6 +76,11 @@ h2 { font-size: 22px; line-height: 1.15; font-weight: 800; letter-spacing: -0.02
 .slide.ig-slide { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; text-decoration: none; color: #fff;
   background: linear-gradient(135deg, #f58529, #dd2a7b 50%, #8134af); font-weight: 800; font-size: 16px; }
 .slide.ig-slide span { font-size: 12px; font-weight: 600; opacity: 0.9; }
+.gal-nav { position: absolute; top: 62px; z-index: 1; width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--line);
+  background: rgba(10, 14, 24, 0.7); color: var(--ink); font-size: 22px; line-height: 1; }
+.gal-nav.prev { left: 8px; }
+.gal-nav.next { right: 8px; }
+.gal-nav[hidden] { display: none; }
 .gallery-count { position: absolute; top: 132px; right: 10px; padding: 2px 8px; border-radius: 999px; background: rgba(10, 14, 24, 0.7); font-size: 11px; color: var(--ink); pointer-events: none; }
 .card-body { padding: 14px 16px 16px; }
 .actions { display: flex; justify-content: center; gap: 18px; margin: 12px 0 2px; }
@@ -181,6 +185,7 @@ h2 { font-size: 22px; line-height: 1.15; font-weight: 800; letter-spacing: -0.02
   .card { left: 8px; right: 8px; width: auto; top: auto; bottom: calc(var(--bottom-h, 150px) - 8px); max-height: 52vh; }
   .gallery { height: 120px; }
   .gallery-count { top: 92px; }
+  .gal-nav { top: 42px; }
   .drawer-open .card { display: none; }
 }
 

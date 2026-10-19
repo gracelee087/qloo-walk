@@ -227,7 +227,6 @@ function renderPlace(p, kicker) {
     src.innerHTML = `${facts ? facts + " · " : ""}From <a href="${p.aboutUrl}" target="_blank" rel="noopener">${p.aboutSource}</a>`;
     src.hidden = false;
   } else src.hidden = true;
-  el("igLink").href = igUrl(p);
   show("card");
   updateDistance();
 }
@@ -244,7 +243,7 @@ function renderGallery(p) {
     g.insertBefore(s, g.querySelector(".ig-slide"));
   };
   const ig = Object.assign(document.createElement("a"), { className: "slide ig-slide", href: igUrl(p), target: "_blank", rel: "noopener" });
-  ig.innerHTML = `📷 See it on Instagram<span>#${tagify(nameOf(p)).toLowerCase()} — photos & reels</span>`;
+  ig.innerHTML = `▶ Watch reels on Instagram<span>#${tagify(nameOf(p)).toLowerCase()} — tap to open</span>`;
   g.append(ig);
   if (p.image) addPhoto(p.image, p.q && p.image === p.q.image ? "Photo: Qloo" : `Photo: ${p.aboutSource || "Wikipedia"}`);
   countSlides();
@@ -255,8 +254,16 @@ function renderGallery(p) {
   }).catch(() => { /* no Qloo photos this time */ });
 }
 function countSlides() {
-  const g = el("gallery"), n = g.children.length, k = Math.round(g.scrollLeft / (g.clientWidth || 1)) + 1;
-  el("galleryCount").textContent = n > 1 ? `${Math.min(k, n)} / ${n} ›` : "";
+  const g = el("gallery"), n = g.children.length, k = Math.min(Math.round(g.scrollLeft / (g.clientWidth || 1)) + 1, n);
+  el("galleryCount").textContent = n > 1 ? `${k} / ${n}` : "";
+  show("galPrev", k > 1);
+}
+// › moves one photo on; on the last slide it opens the place's Instagram reels
+function galleryStep(dir) {
+  const g = el("gallery"), w = g.clientWidth || 1, n = g.children.length;
+  const at = Math.round(g.scrollLeft / w);
+  if (dir > 0 && at >= n - 1) return window.open(igUrl(shown()), "_blank", "noopener");
+  g.scrollTo({ left: Math.max(0, Math.min(n - 1, at + dir)) * w, behavior: "smooth" });
 }
 function showStop() {
   const p = current();
@@ -884,6 +891,8 @@ function wire() {
   el("backBtn").addEventListener("click", showStop);
   el("cardClose").addEventListener("click", () => { state.peek = null; show("card", false); });
   el("gallery").addEventListener("scroll", countSlides, { passive: true });
+  el("galPrev").addEventListener("click", () => galleryStep(-1));
+  el("galNext").addEventListener("click", () => galleryStep(1));
   // sidebar: fold away on desktop, slide up as a drawer on phones
   const setSide = (open) => { document.body.classList.toggle("side-closed", !open); show("sideOpen", !open); layout(); };
   el("sideFold").addEventListener("click", () => setSide(false));
