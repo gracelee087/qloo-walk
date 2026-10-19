@@ -1,9 +1,9 @@
 // TasteWalk — pick a walk, follow the route, tap ✕ / ○ at each stop so the
 // guide learns your taste, snap a photo and post it straight to Instagram.
 // Walking area: city.js. Map: map2d.js. Routing: route.js. Voice: audio.js.
-import { playNarration, stop as audioStop, pause as audioPause, resume as audioResume } from "./audio.js";
+import { playNarration, stop as audioStop, pause as audioPause, resume as audioResume, isPlaying } from "./audio.js";
 import { initMap, setRoute, setStops, markStop, follow, recenter, fitStops, setTheme, setInsets } from "./map2d.js";
-import { metersBetween, orderStops, fetchWalkPath, cumulative, pointAlong } from "./route.js";
+import { metersBetween, bearingTo, orderStops, fetchWalkPath, cumulative, pointAlong } from "./route.js";
 import { CITY } from "./city.js";
 import { consent, setConsent, track, deleteMyData } from "./insights.js";
 
@@ -25,7 +25,7 @@ const COURSES = [
 
 const state = {
   pois: [], sel: null, peek: null, lastLine: "",
-  chat: [], trip: loadTrip(), tastes: loadTastes(),
+  trip: loadTrip(), heading: null, wx: null,
   course: null, stops: [], path: [], cum: [], len: 0,
   i: 0, dist: 0, pos: null, atStop: false,
   mode: "sim", running: false, paused: false, gpsWatch: null,
@@ -46,9 +46,6 @@ const nameOf = (p) => p.enName || p.title;
 // ---------- taste feedback (this device only) ----------
 function loadFeedback() {
   try { return JSON.parse(localStorage.getItem("tw-feedback") || "{}"); } catch { return {}; }
-}
-function loadTastes() {
-  try { return { likes: [], dislikes: [], ...JSON.parse(localStorage.getItem("tw-tastes") || "{}") }; } catch { return { likes: [], dislikes: [] }; }
 }
 function saveFeedback() {
   try { localStorage.setItem("tw-feedback", JSON.stringify(state.feedback)); } catch { /* private mode */ }
@@ -174,8 +171,12 @@ function renderDock() {
   el("prevBtn").disabled = !state.lastLine;
   el("pauseBtn").textContent = state.paused ? "Resume" : "Pause";
 }
-// narration + remember it for ‹ Prev
-function say(text) { state.lastLine = text; el("prevBtn").disabled = false; playNarration(text); }
+// narration + remember it for ‹ Prev + log it in the Guide tab
+function say(text, source, actions) {
+  state.lastLine = text; el("prevBtn").disabled = false;
+  addMsg("buddy", text, actions, source);
+  playNarration(text);
+}
 
 function current() { return state.stops[state.i]; }
 const shown = () => state.peek || current();      // the place on the card right now
@@ -235,7 +236,8 @@ function arrive() {
   state.arrivedAt = Date.now();     // for the opt-in "time at this stop" insight
   showStop();
   const about = p.about ? ` ${sentences(p.about, 2)}` : (p.menu ? ` They serve ${p.menu}.` : "");
-  say(`${nameOf(p)}.${about} Do you like it? Tap Go if it's for you, or Skip.`);
+  const side = sideOf(p.lng, p.lat);
+  say(`${side ? `Look to your ${side}. ` : ""}${nameOf(p)}.${about} Do you like it? Tap Go if it's for you, or Skip.`);
 }
 
 // ✕ Skip / ○ Go — record taste for a place; for the stop you're walking to, move on
@@ -246,6 +248,7 @@ function judge(p, liked) {
   track(liked ? "go" : "skip", p, { course: state.course?.id });
   markStop(p.id, liked ? "liked" : "skipped");
   toast(liked ? `○ Saved — more like ${nameOf(p)}` : "✕ Noted — we'll show you less like this");
+  if (liked) suggestFromLike(p);
   if (state.running && p === current()) return advance();
   if (state.running && state.peek) return showStop();
   renderList();
@@ -262,11 +265,16 @@ function advance() {
   showStop();
 }
 
-// ---------- the buddy: talk while you walk ----------
-// Gemma (/api/chat) only works out what the walker wants; distances, detours and
-// route changes are computed here with real walking routes, so nothing is made up.
+// ---------- the guide: a voice that walks with you (no chat, like Myeongdong 3D) ----------
+// What it says comes from the route, the live weather and Qloo place data —
+// no language model writes anything. Every line is also logged in the Guide tab.
 const TOO_FAR_S = 15 * 60;      // a detour longer than this goes to My Trip instead
 const NEAR_M = 300;             // "you're near a place you saved" radius
+const PASS_M = 80;              // passing a Qloo place this close → its story
+const TIP_M = 250;              // weather tips may point a bit further
+const STORY_GAP_MS = 25000, TIP_GAP_MS = 180000;
+const QLOO_SRC = { label: "From Qloo" };
+const TASTE_SRC = { label: "Qloo taste data — what people with this taste like, not a prediction about you" };
 
 function setTab(tab) {
   document.querySelectorAll(".tab").forEach((b) => b.classList.toggle("on", b.dataset.tab === tab));
@@ -274,80 +282,30 @@ function setTab(tab) {
   document.body.classList.remove("side-closed"); show("sideOpen", false);
   if (!matchMedia("(min-width: 900px)").matches) document.body.classList.add("drawer-open");
   layout();
-  if (tab === "buddy" && !state.chat.length) {
-    addMsg("buddy", `Hey! I'm your walking buddy in ${CITY.area}. Ask me anything, tell me what you're into, or say where you'd like to go.`);
+  if (tab === "buddy" && !el("msgs").children.length) {
+    addMsg("buddy", `I'm your walking guide in ${CITY.area}. Start a walk and I'll talk you through it — everything I say shows up here.`);
   }
   if (tab === "trip") renderTrip();
 }
 
-function addMsg(role, text, action) {
-  if (role !== "typing") state.chat.push({ role, text });
+function addMsg(role, text, actions, source) {
   const m = document.createElement("div");
   m.className = `msg ${role}`;
   m.textContent = text;
-  if (action) {
+  if (source) {
+    const a = Object.assign(document.createElement(source.url ? "a" : "span"), { className: "msg-src", textContent: source.label });
+    if (source.url) Object.assign(a, { href: source.url, target: "_blank", rel: "noopener" });
+    m.append(a);
+  }
+  for (const action of [].concat(actions || [])) {
     const b = document.createElement("button");
     b.className = "msg-act"; b.textContent = action.label;
-    b.addEventListener("click", () => { b.disabled = true; action.run(); });
+    b.addEventListener("click", () => { m.querySelectorAll(".msg-act").forEach((x) => { x.disabled = true; }); action.run(); });
     m.append(b);
   }
   el("msgs").append(m);
   el("msgs").scrollTop = el("msgs").scrollHeight;
   return m;
-}
-
-function chatContext() {
-  const from = state.pos || [CITY.start.lng, CITY.start.lat];
-  const onWalk = new Set(state.stops.map((s) => s.id));
-  const nearby = state.pois.filter((p) => !onWalk.has(p.id))
-    .map((p) => ({ p, d: metersBetween(from, [p.lng, p.lat], p.lat) })).sort((a, b) => a.d - b.d).slice(0, 25).map((x) => nameOf(x.p));
-  return {
-    area: CITY.area,
-    current: state.running && state.atStop && current() ? nameOf(current()) : null,
-    next: state.running && current() ? nameOf(current()) : null,
-    walk: state.stops.map(nameOf), nearby,
-  };
-}
-
-async function sendToBuddy(text) {
-  text = text.trim();
-  if (!text) return;
-  addMsg("user", text);
-  const typing = addMsg("typing", "…");
-  let o;
-  try {
-    const r = await fetch("/api/chat", {
-      method: "POST", headers: { "content-type": "application/json" },
-      body: JSON.stringify({ messages: state.chat.slice(-8), context: chatContext() }),
-    });
-    o = await r.json();
-    if (!r.ok) throw new Error(o.error);
-  } catch {
-    typing.remove();
-    addMsg("buddy", "Sorry, I lost my signal for a second — say that again?");
-    return;
-  }
-  typing.remove();
-  learnTastes(o.likes, o.dislikes);
-  if (o.intent === "want_place" && o.place) {
-    addMsg("buddy", o.reply);
-    const follow = await handleWant(o.place);
-    say(`${o.reply} ${follow}`);
-    return;
-  }
-  addMsg("buddy", o.reply);
-  say(o.reply);
-  if (state.running && current() && o.intent === "skip_current") judge(current(), false);
-  if (state.running && current() && o.intent === "like_current") judge(current(), true);
-}
-
-// taste tags from what the walker says — kept on this device (for Qloo signals later)
-function learnTastes(likes = [], dislikes = []) {
-  const t = state.tastes;
-  for (const x of likes) if (!t.likes.includes(x)) t.likes.push(x);
-  for (const x of dislikes) if (!t.dislikes.includes(x)) t.dislikes.push(x);
-  t.likes = t.likes.slice(-30); t.dislikes = t.dislikes.slice(-30);
-  try { localStorage.setItem("tw-tastes", JSON.stringify(t)); } catch { /* private mode */ }
 }
 
 function findPlace(name) {
@@ -358,20 +316,12 @@ function findPlace(name) {
     || null;
 }
 
-// "I want to go to X": add it to the walk if the detour is short, else save it to My Trip
-async function handleWant(name, { force = false } = {}) {
-  const p = findPlace(name);
-  if (!p) {
-    const msg = `I can't find "${name}" on my map yet, sorry!`;
-    addMsg("buddy", msg);
-    return msg;
-  }
+// add a place to the walk if the detour is short, else save it to My Trip
+async function handleWant(place, { force = false } = {}) {
+  const p = typeof place === "string" ? findPlace(place) : place;
+  if (!p) return say(`I can't find "${place}" on my map yet, sorry!`);
   const k = state.stops.findIndex((s) => s.id === p.id);
-  if (k >= (state.running ? state.i : 0) && k >= 0) {
-    const msg = `${nameOf(p)} is already on our walk — it's stop ${k + 1}.`;
-    addMsg("buddy", msg);
-    return msg;
-  }
+  if (k >= (state.running ? state.i : 0) && k >= 0) return say(`${nameOf(p)} is already on our walk — it's stop ${k + 1}.`);
   const from = state.running ? { lng: state.pos[0], lat: state.pos[1] } : CITY.start;
   const done = state.running ? state.stops.slice(0, state.i) : [];
   const rest = state.running ? state.stops.slice(state.i) : state.stops.slice();
@@ -393,9 +343,7 @@ async function handleWant(name, { force = false } = {}) {
   const extraMin = Math.max(1, Math.round((next.seconds - base.seconds) / 60));
   if (!force && next.seconds - base.seconds > TOO_FAR_S) {
     saveToTrip(p);
-    const msg = `${nameOf(p)} is about ${extraMin} min out of the way, so I saved it to your trip list ⭐ — I'll give you a shout when you're near it.`;
-    addMsg("buddy", msg);
-    return msg;
+    return say(`${nameOf(p)} is about ${extraMin} min out of the way, so I saved it to your trip list ⭐ — I'll give you a shout when you're near it.`);
   }
   // re-plan from here: walked stops stay, the rest follows the new route
   const stops = [...done, ...withP];
@@ -413,9 +361,7 @@ async function handleWant(name, { force = false } = {}) {
     selectPlan({ ...state.sel, stops, path: next.path, cum, len, minutes, reach });
   }
   removeFromTrip(p.id);
-  const msg = `Added ${nameOf(p)} — about ${extraMin} more min of walking. It's stop ${done.length + at + 1} now.`;
-  addMsg("buddy", msg);
-  return msg;
+  say(`Added ${nameOf(p)} — about ${extraMin} more min of walking. It's stop ${done.length + at + 1} now.`);
 }
 
 // ---------- My Trip: places saved for later ----------
@@ -426,10 +372,11 @@ function saveToTrip(p) {
   saveTrip();
 }
 function removeFromTrip(id) { state.trip = state.trip.filter((t) => t.id !== id); saveTrip(); }
+const tripPlace = (t) => state.pois.find((p) => p.id === t.id) || { id: t.id, enName: t.name, lng: t.lng, lat: t.lat, type: t.type, image: t.image };
 function renderTrip() {
   el("tripCount").textContent = state.trip.length;
   const box = el("tripList"); box.innerHTML = "";
-  if (!state.trip.length) { box.innerHTML = `<p class="hint empty">Places you want to see later land here. Tell your buddy “I want to go to …”.</p>`; return; }
+  if (!state.trip.length) { box.innerHTML = `<p class="hint empty">Places you want to see later land here — tap ⭐ Later when the guide suggests one.</p>`; return; }
   const from = state.pos || [CITY.start.lng, CITY.start.lat];
   for (const t of state.trip) {
     const row = document.createElement("div");
@@ -438,7 +385,7 @@ function renderTrip() {
       <div class="spot-text"><b></b><small>${fmtDist(metersBetween(from, [t.lng, t.lat], t.lat))} away</small></div>
       <button class="mini yes" title="Add to this walk">＋</button><button class="mini no" title="Remove">✕</button>`;
     row.querySelector("b").textContent = t.name;
-    row.querySelector(".yes").addEventListener("click", () => { setTab("buddy"); handleWant(t.name, { force: true }); });
+    row.querySelector(".yes").addEventListener("click", () => { setTab("buddy"); handleWant(tripPlace(t), { force: true }); });
     row.querySelector(".no").addEventListener("click", () => removeFromTrip(t.id));
     box.append(row);
   }
@@ -451,29 +398,162 @@ function checkNearTrip() {
     const d = metersBetween(state.pos, [t.lng, t.lat], t.lat);
     if (d > NEAR_M) continue;
     t.alerted = true; saveTrip();
-    const msg = `Psst — ${t.name}, the place you wanted to see, is just ${fmtDist(d)} from here. Want to drop by?`;
     toast(`⭐ ${t.name} is ${fmtDist(d)} away`, 6000);
-    addMsg("buddy", msg, { label: "＋ Add to the walk", run: () => handleWant(t.name, { force: true }) });
-    say(msg);
+    say(`Psst — ${t.name}, the place you wanted to see, is just ${fmtDist(d)} from here. Want to drop by?`,
+      null, { label: "＋ Add to the walk", run: () => handleWant(tripPlace(t), { force: true }) });
   }
 }
 
-// ---------- voice input (browser speech recognition) ----------
-function initMic() {
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR) { show("micBtn", false); return; }
-  const rec = new SR();
-  rec.lang = navigator.language || "en-US"; rec.interimResults = false; rec.maxAlternatives = 1;
-  rec.onresult = (e) => sendToBuddy(e.results[0][0].transcript);
-  rec.onend = () => el("micBtn").classList.remove("on");
-  rec.onerror = (e) => { el("micBtn").classList.remove("on"); if (e.error === "not-allowed") toast("🎤 Microphone blocked — allow it in the browser settings"); };
-  el("micBtn").addEventListener("click", () => {
-    if (el("micBtn").classList.contains("on")) return rec.stop();
-    audioStop();
-    try { rec.start(); el("micBtn").classList.add("on"); } catch { /* already listening */ }
-  });
+// ---------- Qloo ----------
+const qget = async (path) => { const r = await fetch(path); const j = await r.json(); if (!r.ok) throw new Error(j.error); return j; };
+const waitQuiet = async () => { while (isPlaying()) await new Promise((r) => setTimeout(r, 300)); };
+const TYPE_BY_TAG = [[/restaurant|cafe|coffee|bar|bakery|food|pub|bistro/i, "food"], [/museum|gallery|theat|cinema|club|music|art/i, "culture"],
+  [/shop|store|market|boutique/i, "shopping"]];
+// a Qloo place in the shape the walk uses
+function qPlace(q) {
+  const type = (TYPE_BY_TAG.find(([re]) => q.tags.some((t) => re.test(t))) || [, "attraction"])[1];
+  return { id: "qloo:" + q.id, qid: q.id, q, enName: q.name, title: q.name, lng: q.lon, lat: q.lat, type, image: q.image || "", about: q.about || "" };
+}
+// the Qloo entry for one of our places: same name, within 150 m
+async function qlooMatch(p) {
+  if (p.q !== undefined) return p.q;
+  const j = await qget(`/api/qloo/search?q=${encodeURIComponent(nameOf(p))}`);
+  p.q = j.places.find((q) => metersBetween([p.lng, p.lat], [q.lon, q.lat], p.lat) < 150) || null;
+  if (p.q) p.qid = p.q.id;
+  return p.q;
 }
 
+// ○ Go → the places Qloo says people with the same taste also like; offer the nearest
+const qlooLikes = [];           // Qloo ids of places Go'd on this visit (signals, max 5 sent)
+const suggested = new Set();
+async function suggestFromLike(p) {
+  try {
+    const q = await qlooMatch(p);
+    if (!q) return;
+    if (!qlooLikes.includes(q.id)) qlooLikes.push(q.id);
+    const j = await qget(`/api/qloo/similar?ids=${qlooLikes.slice(-5).join(",")}&take=20`);
+    const from = state.pos || [CITY.start.lng, CITY.start.lat];
+    const taken = new Set([...state.stops.map((s) => s.qid), ...state.trip.map((t) => t.id), ...suggested]);
+    const pick = j.places.slice(0, 10).filter((x) => !taken.has(x.id) && !taken.has("qloo:" + x.id))
+      .map((x) => ({ x, d: metersBetween(from, [x.lon, x.lat], x.lat) })).filter((c) => c.d < 2500).sort((a, b) => a.d - b.d)[0];
+    if (!pick) return;
+    suggested.add(pick.x.id);
+    const place = qPlace(pick.x);
+    await waitQuiet();
+    say(`Since you liked ${nameOf(p)}: people with that taste also like ${pick.x.name}, ${fmtDist(pick.d)} from here.${pick.x.about ? " " + sentences(pick.x.about, 1) : ""}`,
+      TASTE_SRC, [
+        { label: "＋ Add to the walk", run: () => handleWant(place, { force: true }) },
+        { label: "⭐ Later", run: () => { saveToTrip(place); toast(`⭐ Saved ${pick.x.name}`); } },
+      ]);
+  } catch { /* Qloo unavailable — no suggestion this time */ }
+}
+
+// ---------- on the way: passing places + weather tips, from nearby Qloo places ----------
+const nearbyCache = new Map();  // ~100 m grid cell → Promise of places (the server rounds the same way)
+function nearbyPlaces([lng, lat]) {
+  const key = `${lat.toFixed(3)},${lng.toFixed(3)}`;
+  if (!nearbyCache.has(key)) nearbyCache.set(key, qget(`/api/qloo/nearby?lat=${lat.toFixed(3)}&lon=${lng.toFixed(3)}`).then((j) => j.places).catch(() => []));
+  return nearbyCache.get(key);
+}
+// what the weather/time asks for → Qloo place tags that answer it
+function conditions() {
+  const w = state.wx || {}, h = +new Date().toLocaleString("en-US", { timeZone: CITY.tz, hour: "numeric", hour12: false }), out = [];
+  if (w.code >= 51) out.push({ why: w.code >= 71 && w.code <= 77 ? "the snow" : "the rain", tags: ["cozy", "hot chocolate", "indoor", "warm atmosphere", "fireplace"] });
+  if (w.temp != null && w.temp <= 8) out.push({ why: "a cold day", tags: ["cozy", "hot chocolate", "warm atmosphere", "fireplace"] });
+  if (w.temp != null && w.temp >= 26) out.push({ why: "the heat", tags: ["ice cream", "air condition", "garden", "river view", "shade"] });
+  if (w.code != null && w.code <= 2 && w.day && w.temp > 12) out.push({ why: "the sunshine", tags: ["outdoor seating", "outdoor terrace", "terrace", "beer garden", "garden", "rooftop"] });
+  if (h >= 17 && h < 21) out.push({ why: "this evening", tags: ["sunset view", "evening", "live music"] });
+  if (h >= 21 || h < 4) out.push({ why: "tonight", tags: ["late night", "nightlife", "late night food", "live music"] });
+  if (h >= 6 && h < 11) out.push({ why: "the morning", tags: ["breakfast", "brunch", "early morning"] });
+  return out;
+}
+function weatherTip(near) {
+  for (const c of conditions()) for (const { q, d } of near) {
+    const tag = q.tags.find((t) => c.tags.some((k) => t.toLowerCase().includes(k)));
+    if (tag) return { q, d, text: `Tip for ${c.why}: ${q.name}, ${fmtDist(d)} away${sideOf(q.lon, q.lat) ? ` on your ${sideOf(q.lon, q.lat)}` : ""} — Qloo tags it “${tag}”.` };
+  }
+  return null;
+}
+const told = new Set();
+let lastStoryAt = 0, lastTipAt = 0, aroundBusy = false;
+async function checkAround() {
+  if (!state.running || state.atStop || state.paused || aroundBusy || !state.pos || isPlaying()) return;
+  aroundBusy = true;
+  try {
+    if (state.mode === "sim" && state.path.length) nearbyPlaces(pointAlong(state.path, state.cum, state.dist + 200).pos);   // fetch ahead
+    const here = state.pos, places = await nearbyPlaces(here);
+    if (!state.running || state.atStop || isPlaying()) return;
+    const onWalk = (q) => state.stops.some((s) => s.qid === q.id || metersBetween([s.lng, s.lat], [q.lon, q.lat], q.lat) < 40);
+    const near = places.filter((q) => !told.has(q.id) && !onWalk(q))
+      .map((q) => ({ q, d: metersBetween(here, [q.lon, q.lat], q.lat) })).sort((a, b) => a.d - b.d);
+    const now = Date.now();
+    const tip = now - lastTipAt > TIP_GAP_MS ? weatherTip(near.filter((x) => x.d < TIP_M)) : null;
+    if (tip) {
+      told.add(tip.q.id); lastTipAt = lastStoryAt = now;
+      return say(tip.text, QLOO_SRC, { label: "⭐ Later", run: () => { saveToTrip(qPlace(tip.q)); toast(`⭐ Saved ${tip.q.name}`); } });
+    }
+    const pass = now - lastStoryAt > STORY_GAP_MS && near.find((x) => x.d < PASS_M && (x.q.story || x.q.about));
+    if (pass) {
+      told.add(pass.q.id); lastStoryAt = now;
+      const side = sideOf(pass.q.lon, pass.q.lat);
+      say(`${side ? `On your ${side}, ` : "Right here, "}${pass.q.name}. ${sentences(pass.q.story || pass.q.about, 2)}`, QLOO_SRC);
+    }
+  } finally { aroundBusy = false; }
+}
+
+// ---------- navigation voice: turns, off-route, progress (from Myeongdong 3D) ----------
+const angDiff = (a, b) => ((b - a + 540) % 360) - 180;
+// "left"/"right" for a point beside the walker; "" when it's ahead or behind
+function sideOf(lng, lat) {
+  if (!state.pos || state.heading == null) return "";
+  const d = angDiff(state.heading, bearingTo({ lng: state.pos[0], lat: state.pos[1] }, { lng, lat }));
+  if (Math.abs(d) < 25 || Math.abs(d) > 155) return "";
+  return d > 0 ? "right" : "left";
+}
+const segBearing = (a, b) => bearingTo({ lng: a[0], lat: a[1] }, { lng: b[0], lat: b[1] });
+function turnAt(i) {
+  const p = state.path, d = angDiff(segBearing(p[i - 1], p[i]), segBearing(p[i], p[i + 1]));
+  return Math.abs(d) < 38 ? null : { i, dir: d > 0 ? "right" : "left" };
+}
+// demo walk: the next sharp corner within 26 m ahead
+function upcomingTurn() {
+  for (let i = 1; i < state.path.length - 1; i++) {
+    if (state.cum[i] <= state.dist) continue;
+    if (state.cum[i] - state.dist > 26) return null;
+    const t = turnAt(i);
+    if (t) return t;
+  }
+  return null;
+}
+// GPS: the nearest corner within 28 m of the real position
+function gpsUpcomingTurn(a) {
+  let bi = -1, bd = 28;
+  for (let i = 1; i < state.path.length - 1; i++) {
+    const d = metersBetween(a, state.path[i], a[1]);
+    if (d < bd) { bd = d; bi = i; }
+  }
+  return bi < 1 ? null : turnAt(bi);
+}
+const distToRoute = (a) => state.path.reduce((m, p) => Math.min(m, metersBetween(a, p, a[1])), Infinity);
+let turnIdx = -1, offRoute = false, lastNavTalk = 0, lastPing = Date.now();
+function navTick() {
+  if (!state.running || state.paused || state.atStop || !state.pos || isPlaying() || !state.path.length) return;
+  const turn = state.mode === "gps" ? gpsUpcomingTurn(state.pos) : upcomingTurn();
+  if (turn && turn.i !== turnIdx) { turnIdx = turn.i; playNarration(`Coming up — turn ${turn.dir}.`); return; }
+  if (state.mode !== "gps") return;
+  const next = current(), now = Date.now(), d = distToRoute(state.pos);
+  const ahead = next ? ` ${nameOf(next)} is about ${fmtDist(metersBetween(state.pos, [next.lng, next.lat], next.lat))} away.` : "";
+  if (d > 45 && !offRoute && now - lastNavTalk > 25000) {
+    offRoute = true; lastNavTalk = now; toast("↩️ Off the route");
+    say(`Looks like you've wandered off the route.${next ? ` Head back toward ${nameOf(next)} — it's about ${fmtDist(metersBetween(state.pos, [next.lng, next.lat], next.lat))} away.` : ""}`);
+  } else if (d < 28 && offRoute) {
+    offRoute = false; lastNavTalk = now; toast("✅ Back on the route");
+    say(`Nice — you're back on the route.${ahead}`);
+  } else if (!offRoute && next && now - lastPing > 90000 && now - lastNavTalk > 30000) {
+    lastPing = lastNavTalk = now;
+    say(`You're doing great.${ahead}`);
+  }
+}
 
 // ---------- movement: demo walk + live GPS ----------
 let lastTs = 0;
@@ -483,6 +563,7 @@ function frame(ts) {
     state.dist = Math.min(state.dist + WALK_SPEED * dt, state.len);
     const at = pointAlong(state.path, state.cum, state.dist);
     state.pos = at.pos;
+    state.heading = at.heading;
     follow(state.pos[0], state.pos[1], at.heading);
     checkArrival();
     if (state.dist >= state.len && !state.atStop) arrive();
@@ -497,6 +578,8 @@ function checkArrival() {
   if (d < ARRIVE_M) arrive();
 }
 setInterval(() => { updateDistance(); checkNearTrip(); }, 1000);
+setInterval(checkAround, 3000);
+setInterval(navTick, 700);
 
 function startGPS() {
   if (!navigator.geolocation) { toast("This browser has no location access."); return; }
@@ -504,6 +587,8 @@ function startGPS() {
   toast("📍 Finding you… allow location access");
   state.gpsWatch = navigator.geolocation.watchPosition((pos) => {
     const { latitude: lat, longitude: lng } = pos.coords;
+    // heading from the last fix, once you've moved a few metres (for "on your left/right")
+    if (state.pos && metersBetween(state.pos, [lng, lat], lat) > 4) state.heading = bearingTo({ lng: state.pos[0], lat: state.pos[1] }, { lng, lat });
     state.pos = [lng, lat];
     follow(lng, lat);
     if (metersBetween(state.pos, [CITY.start.lng, CITY.start.lat], lat) > CITY.maxFromCenterM) {
@@ -534,15 +619,13 @@ function photoPlace() {
   }
   return CITY.area;
 }
-const placeKind = (name) => {
-  const p = state.stops.find((s) => nameOf(s) === name);
-  return p ? [TYPE_LABEL[p.type], p.menu].filter(Boolean).join(", ") : "";
-};
 const tagify = (s) => s.replace(/&/g, "and").replace(/[^\p{L}\p{N}]+/gu, "");
-function defaultCaption(place) {
-  const tags = [place !== CITY.area && tagify(place), ...CITY.hashtags, "TasteWalk"].filter(Boolean);
+// q = the place's Qloo entry, if Qloo knows it: its one-line description + review keywords as hashtags
+function defaultCaption(place, q) {
+  const words = (q?.keywords || []).filter((k) => !place.toLowerCase().includes(k.toLowerCase())).slice(0, 3);
+  const tags = [place !== CITY.area && tagify(place), ...words.map(tagify), ...CITY.hashtags, "TasteWalk"].filter(Boolean);
   const where = place === CITY.area ? place : `${place}, ${CITY.area}`;
-  return `📍 ${where}\n\n${tags.map((t) => "#" + t).join(" ")}`;
+  return `📍 ${where}${q?.about ? `\n${sentences(q.about, 1)}` : ""}\n\n${[...new Set(tags)].map((t) => "#" + t).join(" ")}`;
 }
 function compressImage(file, maxW = 1080) {
   return new Promise((res, rej) => {
@@ -569,18 +652,16 @@ async function onPhoto(e) {
   el("postImg").src = dataUrl;
   const ta = el("postText");
   ta.value = defaultCaption(place); ta.dataset.edited = "";
-  el("postHint").textContent = "Writing a caption…";
   show("post");
-  // AI caption from the photo itself; keep the template if it fails or the user already typed
-  try {
-    const r = await fetch("/api/caption", {
-      method: "POST", headers: { "content-type": "application/json" },
-      // photo is sent to Gemma (free tier: Google may use inputs to improve its products)
-      body: JSON.stringify({ img: dataUrl, place, area: CITY.area, kind: placeKind(place), hashtags: CITY.hashtags }),
-    });
-    const j = await r.json();
-    if (r.ok && j.caption && !ta.dataset.edited) ta.value = j.caption;
-  } catch { /* template stays */ }
+  // caption from Qloo's data for the place (the photo itself never leaves the device);
+  // keep the template if Qloo doesn't know it or the user already typed
+  if (stop) {
+    el("postHint").textContent = "Looking the place up on Qloo…";
+    try {
+      const q = await qlooMatch(stop);
+      if (q && !ta.dataset.edited) ta.value = defaultCaption(place, q);
+    } catch { /* template stays */ }
+  }
   el("postHint").textContent = "Sharing copies your caption — paste it in Instagram and add the location there.";
 }
 async function copyCaption() {
@@ -624,6 +705,7 @@ async function fetchWeather() {
     const u = `https://api.open-meteo.com/v1/forecast?latitude=${CITY.start.lat}&longitude=${CITY.start.lng}&current=temperature_2m,weather_code,is_day&timezone=${encodeURIComponent(CITY.tz)}`;
     const { current: c } = await (await fetch(u)).json();
     weather = `${WX(c.weather_code, c.is_day)} ${Math.round(c.temperature_2m)}°`;
+    state.wx = { code: c.weather_code, temp: c.temperature_2m, day: !!c.is_day };   // for the guide's weather tips
     setTheme(c.is_day ? "day" : "night");
   } catch { weather = ""; setTheme(guessTheme()); }
   renderEnv();
@@ -656,11 +738,8 @@ function wire() {
     if (document.body.classList.contains("drawer-open")) document.body.classList.remove("drawer-open");
     else setTab("spots");
   });
-  // the buddy: tabs, typing, talking
+  // sidebar tabs: spots · the guide's log · My Trip
   document.querySelectorAll(".tab").forEach((b) => b.addEventListener("click", () => setTab(b.dataset.tab)));
-  el("talkBtn").addEventListener("click", () => { setTab("buddy"); el("sayInput").focus(); });
-  el("sayForm").addEventListener("submit", (e) => { e.preventDefault(); const t = el("sayInput").value; el("sayInput").value = ""; sendToBuddy(t); });
-  initMic();
   renderTrip();
   // opt-in insights: ask once, changeable + deletable from the sidebar
   const renderShare = () => { el("shareState").textContent = consent() === "yes" ? "on" : "off"; };

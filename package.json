@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "netlify dev",
     "start": "netlify dev",
+    "serve": "node --env-file=.env server.mjs",
     "refresh-data": "node scripts/fetch-area.mjs"
   },
   "devDependencies": {

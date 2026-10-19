@@ -230,7 +230,7 @@ h2 { font-size: 22px; line-height: 1.15; font-weight: 800; letter-spacing: -0.02
 .side-note b { color: var(--ink); }
 .side-note .link { padding: 0; font-size: 12px; }
 
-/* ---------- sidebar tabs + the buddy ---------- */
+/* ---------- sidebar tabs + the guide's log ---------- */
 .side-head { padding: 8px 10px; gap: 8px; }
 .tabs { flex: 1; display: flex; gap: 4px; min-width: 0; overflow-x: auto; scrollbar-width: none; }
 .tab {
@@ -243,19 +243,9 @@ h2 { font-size: 22px; line-height: 1.15; font-weight: 800; letter-spacing: -0.02
 .msgs { flex: 1; overflow: auto; display: flex; flex-direction: column; gap: 8px; padding: 4px 2px 8px; }
 .msg { flex: none; max-width: 86%; padding: 9px 12px; border-radius: 16px; font-size: 14px; line-height: 1.4; white-space: pre-wrap; }
 .msg.buddy { align-self: flex-start; background: var(--glass-2); border-bottom-left-radius: 4px; }
-.msg.user { align-self: flex-end; background: var(--grad); color: #fff; border-bottom-right-radius: 4px; }
 .msg.typing { align-self: flex-start; color: var(--muted); font-style: italic; background: none; padding: 4px 8px; }
-.msg-act { display: block; margin-top: 8px; padding: 7px 12px; border-radius: 10px; border: 0; background: var(--grad); color: #fff; font-weight: 700; font-size: 13px; }
+.msg-act { display: inline-block; margin: 8px 6px 0 0; padding: 7px 12px; border-radius: 10px; border: 0; background: var(--grad); color: #fff; font-weight: 700; font-size: 13px; }
 .msg-act:disabled { opacity: 0.5; }
-.say { display: flex; gap: 6px; padding: 8px 0 4px; }
-.say input {
-  flex: 1; min-width: 0; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--line);
-  background: var(--glass-2); color: var(--ink); font: 14px var(--sans);
-}
-.mic, .send { flex: none; width: 40px; border-radius: 12px; border: 1px solid var(--line); background: var(--glass-2); font-size: 16px; }
-.send { background: var(--grad); border-color: transparent; color: #fff; }
-.mic.on { background: #ef4444; border-color: #ef4444; animation: pulse 1s infinite; }
-@keyframes pulse { 50% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0.25); } }
 .buddy .hint { margin: 2px 0 8px; font-size: 11px; }
-.btn.talk { background: rgba(124, 92, 255, 0.25); }
 .empty { padding: 12px; }
+.msg-src { display: block; margin-top: 6px; font-size: 11px; color: var(--muted); }

@@ -53,19 +53,14 @@
       <button class="side-fold" id="sideFold" title="Hide list">›</button>
       <div class="tabs" role="tablist">
         <button class="tab on" data-tab="spots"><span id="sideTitle">—</span> <span class="side-count" id="sideCount">0</span></button>
-        <button class="tab" data-tab="buddy">💬 Buddy</button>
+        <button class="tab" data-tab="buddy">🎧 Guide</button>
         <button class="tab" data-tab="trip">⭐ Trip <span class="side-count" id="tripCount">0</span></button>
       </div>
     </div>
     <div class="pane side-list" id="sideList" data-pane="spots"></div>
     <div class="pane buddy" data-pane="buddy" hidden>
       <div class="msgs" id="msgs"></div>
-      <form class="say" id="sayForm">
-        <button type="button" class="mic" id="micBtn" title="Talk">🎤</button>
-        <input id="sayInput" placeholder="Talk to your buddy…" autocomplete="off" maxlength="400" />
-        <button class="send" title="Send">➤</button>
-      </form>
-      <p class="hint">Your messages go to Google's Gemma (free tier — Google may use them to improve its products). The 🎤 uses your browser's speech recognition.</p>
+      <p class="hint">Everything the guide says, in order. Place stories, tips and suggestions come from Qloo; to find places near you, your rough position (about 100 m) is sent to our server and Qloo.</p>
     </div>
     <div class="pane side-list" id="tripList" data-pane="trip" hidden></div>
     <p class="hint side-note">
@@ -93,7 +88,6 @@
       <button class="btn" id="pauseBtn" disabled>Pause</button>
       <button class="btn" id="prevBtn" disabled title="Replay what the guide just said">‹ Prev</button>
       <button class="btn" id="nextBtn" disabled title="Skip ahead to the next stop">Next ›</button>
-      <button class="btn talk" id="talkBtn" title="Talk to your buddy">💬 Talk</button>
       <button class="btn mob-only" id="listBtn" title="Places on this walk">📋</button>
       <button class="btn" id="snapBtn" title="Snap a photo">📷</button>
       <button class="btn" id="resetBtn" title="Back to the start">↺</button>

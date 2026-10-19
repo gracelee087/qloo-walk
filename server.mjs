@@ -1,0 +1,120 @@
+// The whole app in one Node process (hackathon kit: backend on a VM/container,
+// not serverless). Serves the static app and the /api routes:
+//   /api/route -> the handler in netlify/functions/route.js (Request -> Response)
+//   GET /api/qloo/search?q=<name>              -> Qloo places in the walking area matching a name
+//   GET /api/qloo/similar?ids=<id,id>&take=<n> -> Qloo places in the area with taste affinity to those places
+//   GET /api/qloo/nearby?lat=<lat>&lon=<lon>   -> Qloo places within NEARBY_M of a point (stories + tips while walking)
+// Run: node --env-file=.env server.mjs   (PORT, default 8888)
+import http from "node:http";
+import { readFile } from "node:fs/promises";
+import { extname, join, normalize, sep } from "node:path";
+import { fileURLToPath } from "node:url";
+import { CITY } from "./js/city.js";
+import { qloo } from "./server/qloo.js";
+
+const ROOT = fileURLToPath(new URL(".", import.meta.url));
+const PORT = Number(process.env.PORT) || 8888;
+const STATIC_DIRS = ["css", "js", "data"];         // same set as scripts/build-site.mjs
+const TYPES = { ".html": "text/html; charset=utf-8", ".css": "text/css", ".js": "text/javascript",
+  ".json": "application/json", ".svg": "image/svg+xml", ".png": "image/png", ".jpg": "image/jpeg", ".webp": "image/webp" };
+const FUNCTIONS = ["route"];
+const SOURCE = "Qloo Insights API (hackathon), via the qloo api CLI";
+const NEARBY_M = 300;
+
+const handlers = {};
+for (const f of FUNCTIONS) handlers[f] = (await import(`./netlify/functions/${f}.js`)).default;
+
+// metres between two {lat, lon}
+function dist(a, b) {
+  const R = 6371000, r = Math.PI / 180;
+  const x = Math.sin((b.lat - a.lat) * r / 2) ** 2 +
+    Math.cos(a.lat * r) * Math.cos(b.lat * r) * Math.sin((b.lon - a.lon) * r / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(x));
+}
+const center = { lat: CITY.start.lat, lon: CITY.start.lng };
+const inArea = (e) => e.location && dist(center, e.location) <= CITY.maxFromCenterM;
+
+// only what the app shows — never pass the full Qloo response through
+const place = (e) => ({
+  id: e.entity_id, name: e.name,
+  lat: e.location.lat, lon: e.location.lon,
+  address: e.properties?.address ?? null,
+  affinity: e.query?.affinity ?? null,
+  tags: (e.tags || []).map((t) => t.name),
+  about: e.properties?.short_description || e.properties?.description || null,
+  story: e.properties?.unique_selling_points || e.properties?.neighborhood_description || null,
+  keywords: (e.properties?.keywords || []).slice(0, 5).map((k) => k.name),
+  image: e.properties?.image?.url ?? null,
+});
+
+async function qlooRoute(path, u) {
+  if (path === "search") {
+    const q = (u.searchParams.get("q") || "").trim().slice(0, 80);
+    if (!q) return Response.json({ error: "q required" }, { status: 400 });
+    const j = await qloo(["search", "-q", q, "-t", "place", "-n", "10"]);
+    return Response.json({ places: j.filter(inArea).slice(0, 5).map(place), source: SOURCE });
+  }
+  if (path === "similar") {
+    const ids = (u.searchParams.get("ids") || "").split(",").map((s) => s.trim()).filter((s) => /^[0-9A-F-]{36}$/i.test(s)).slice(0, 5);
+    if (!ids.length) return Response.json({ error: "ids required" }, { status: 400 });
+    const take = Math.min(Math.max(Number(u.searchParams.get("take")) || 10, 1), 20);
+    const j = await qloo(["insights", "-t", "place", "--signal-entities", ids.join(","), "--filter-location", CITY.area, "-n", String(take)]);
+    const places = j.filter(inArea).filter((e) => !ids.includes(e.entity_id)).map(place);
+    return Response.json({ places, source: SOURCE,
+      note: "Affinity is aggregate taste data from Qloo, not a prediction about one person." });
+  }
+  if (path === "nearby") {
+    // ~100 m grid so walkers on the same block share one cached Qloo call
+    const lat = Math.round(Number(u.searchParams.get("lat")) * 1000) / 1000;
+    const lon = Math.round(Number(u.searchParams.get("lon")) * 1000) / 1000;
+    if (!inArea({ location: { lat, lon } })) return Response.json({ error: "outside the walking area" }, { status: 400 });
+    const j = await qloo(["insights", "-t", "place", "-n", "20",
+      "--params", JSON.stringify({ "filter.location": `POINT(${lon} ${lat})`, "filter.location.radius": NEARBY_M })]);
+    return Response.json({ places: j.filter((e) => e.location).map(place), source: SOURCE });
+  }
+  return Response.json({ error: "not found" }, { status: 404 });
+}
+
+async function api(req, u) {
+  const [, , name, sub] = u.pathname.split("/");     // /api/<name>[/<sub>]
+  if (name === "qloo" && req.method === "GET") {
+    try { return await qlooRoute(sub, u); }
+    catch (e) { console.error("qloo:", e.message); return Response.json({ error: "qloo unavailable" }, { status: 502 }); }
+  }
+  if (!handlers[name]) return Response.json({ error: "not found" }, { status: 404 });
+  const chunks = [];
+  for await (const c of req) chunks.push(c);
+  const request = new Request(u, { method: req.method, headers: req.headers,
+    body: ["GET", "HEAD"].includes(req.method) ? undefined : Buffer.concat(chunks) });
+  return handlers[name](request);
+}
+
+async function file(u) {
+  const rel = u.pathname === "/" ? "index.html" : normalize(decodeURIComponent(u.pathname)).replace(/^[\\/]+/, "");
+  const top = rel.split(sep)[0].split("/")[0];
+  if (rel !== "index.html" && !STATIC_DIRS.includes(top)) return null;
+  if (rel.includes("..") || rel.includes("qloo-cache")) return null;
+  try { return { body: await readFile(join(ROOT, rel)), type: TYPES[extname(rel)] || "application/octet-stream" }; }
+  catch { return null; }
+}
+
+http.createServer(async (req, res) => {
+  const u = new URL(req.url, `http://${req.headers.host || "localhost"}`);
+  try {
+    if (u.pathname.startsWith("/api/")) {
+      const r = await api(req, u);
+      res.writeHead(r.status, Object.fromEntries(r.headers));
+      return res.end(Buffer.from(await r.arrayBuffer()));
+    }
+    const f = await file(u);
+    if (!f) { res.writeHead(404, { "content-type": "text/plain" }); return res.end("not found"); }
+    res.writeHead(200, { "content-type": f.type });
+    res.end(f.body);
+  } catch (e) {
+    console.error(u.pathname, e);
+    if (!res.headersSent) res.writeHead(500, { "content-type": "application/json" });
+    res.end(JSON.stringify({ error: "server error" }));
+  }
+}).listen(PORT, () => {
+  console.log(`TasteWalk on http://localhost:${PORT}`);
+});
