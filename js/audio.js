@@ -37,6 +37,9 @@ export function stop() {
   current = { resolve: null };
   if (r) r();
 }
+// call inside a tap: iOS Safari only lets speech start from a user gesture,
+// and once one utterance has played, later ones (from timers) are allowed too
+export function prime() { synth?.speak(new SpeechSynthesisUtterance(" ")); }
 export function pause() { held = true; synth?.pause(); }
 export function resume() { held = false; synth?.resume(); }
 export function isPlaying() { return !!synth?.speaking && !synth.paused; }

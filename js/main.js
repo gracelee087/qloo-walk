@@ -1,8 +1,8 @@
 // TasteWalk — pick a walk, follow the route, tap ✕ / ○ at each stop so the
 // guide learns your taste, snap a photo and post it straight to Instagram.
 // Walking area: city.js. Map: map2d.js. Routing: route.js. Voice: audio.js.
-import { playNarration, stop as audioStop, pause as audioPause, resume as audioResume, isPlaying } from "./audio.js";
-import { initMap, setRoute, setStops, markStop, follow, recenter, fitStops, setTheme, setInsets } from "./map2d.js";
+import { playNarration, stop as audioStop, pause as audioPause, resume as audioResume, isPlaying, prime } from "./audio.js";
+import { initMap, setRoute, setStops, markStop, follow, recenter, fitStops, setTheme, setInsets, streetAt } from "./map2d.js";
 import { metersBetween, bearingTo, orderStops, fetchWalkPath, cumulative, pointAlong } from "./route.js";
 import { CITY } from "./city.js";
 import { consent, setConsent, track, deleteMyData } from "./insights.js";
@@ -10,6 +10,8 @@ import { consent, setConsent, track, deleteMyData } from "./insights.js";
 const el = (id) => document.getElementById(id);
 const WALK_SPEED = 12;          // m/s — the demo walk is sped up
 const ARRIVE_M = 35;            // "you're at the stop"
+const OTHER_STOP_M = 40;        // GPS: this close to a later stop → take it now (Myeongdong 3D's POI_TRIGGER)
+const GOOD_FIX_M = 50;          // GPS fixes less accurate than this don't trigger arrivals or route warnings
 const WALK_M_PER_MIN = 75;      // ~4.5 km/h, for time estimates when routing is down
 // assumed minutes spent at each kind of stop — only for the "est." times
 const DWELL = { food: 30, culture: 20, attraction: 10, shopping: 10 };
@@ -25,7 +27,7 @@ const COURSES = [
 
 const state = {
   pois: [], sel: null, peek: null, lastLine: "",
-  trip: loadTrip(), heading: null, wx: null,
+  trip: loadTrip(), heading: null, wx: null, fix: null, posGood: true, photoSpot: null, postEdited: false,
   course: null, stops: [], path: [], cum: [], len: 0,
   i: 0, dist: 0, pos: null, atStop: false,
   mode: "sim", running: false, paused: false, gpsWatch: null,
@@ -52,11 +54,11 @@ function saveFeedback() {
 }
 
 // ---------- courses ----------
-function pickStops(course) {
+function pickStops(course, from) {
   // nearest first, but a place without a description counts as 400 m farther,
   // so walks favour stops the guide can actually tell you about
   const near = state.pois.filter(course.pick)
-    .map((p) => ({ p, d: metersBetween([p.lng, p.lat], [CITY.start.lng, CITY.start.lat], p.lat) + (p.about ? 0 : 400) }))
+    .map((p) => ({ p, d: metersBetween([p.lng, p.lat], [from.lng, from.lat], p.lat) + (p.about ? 0 : 400) }))
     .sort((a, b) => a.d - b.d).map((x) => x.p);
   if (!course.mix) return near.slice(0, course.n);
   // round-robin over place types so "Classic" isn't all restaurants
@@ -69,15 +71,16 @@ function pickStops(course) {
   }
   return out;
 }
-async function planCourse(course) {
-  const stops = orderStops(CITY.start, pickStops(course));
-  const { path, seconds, fallback, waypoints } = await fetchWalkPath(CITY.start, stops, WALK_M_PER_MIN);
+// from = where the walk starts: the demo start, or (GPS) where you are
+async function planCourse(course, from = CITY.start) {
+  const stops = orderStops(from, pickStops(course, from));
+  const { path, seconds, fallback, waypoints } = await fetchWalkPath(from, stops, WALK_M_PER_MIN);
   const cum = cumulative(path);
   const len = cum[cum.length - 1] || 0;
   const minutes = seconds / 60 + stops.reduce((s, p) => s + (DWELL[p.type] || 10), 0);
   // where the route reaches each stop (on the footway); a big square's centre can be 40 m+ off the path
   const reach = stops.map((p, k) => waypoints[k + 1] || [p.lng, p.lat]);
-  return { course, stops, path, cum, len, minutes, fallback, reach };
+  return { course, from, stops, path, cum, len, minutes, fallback, reach };
 }
 // course chips along the bottom; tapping one draws its route and fills the sidebar right away
 async function renderCourseBar() {
@@ -102,12 +105,13 @@ function selectPlan(plan) {
   if (state.running) endWalk(true);
   state.sel = plan;
   Object.assign(state, { course: plan.course, stops: plan.stops, path: plan.path, cum: plan.cum, len: plan.len, i: 0, dist: 0, atStop: false, peek: null });
-  state.pos = [CITY.start.lng, CITY.start.lat];
+  const from = plan.from || CITY.start;
+  state.pos = [from.lng, from.lat];
   follow(state.pos[0], state.pos[1]);
   setRoute(plan.path);
   setStops(plan.stops, peek);
   for (const p of plan.stops) if (state.feedback[p.id] !== undefined) markStop(p.id, state.feedback[p.id] ? "liked" : "skipped");
-  fitStops(CITY.start);
+  fitStops(from);
   document.querySelectorAll(".chip-course").forEach((b) => b.classList.toggle("on", b.dataset.id === plan.course.id));
   show("card", false);
   renderList();
@@ -142,20 +146,49 @@ function renderList() {
 }
 
 // ---------- the walk ----------
-function startWalk() {
+async function startWalk() {
   if (!state.sel) return;
+  prime();                      // still inside the tap, so iOS lets the guide speak later
+  keepAwake(true);
+  if (state.mode === "gps") {
+    // like Myeongdong 3D: in GPS mode the walk starts from where you are
+    el("startBtn").disabled = true;
+    startGPS();
+    const at = await firstFix(12000);
+    const away = at && metersBetween(at, [CITY.start.lng, CITY.start.lat], at[1]);
+    if (at && away > 150 && away < CITY.maxFromCenterM) {
+      toast("📍 Planning the walk from where you are…");
+      selectPlan(await planCourse(state.course, { lng: at[0], lat: at[1] }));
+    }
+  }
   Object.assign(state, { i: 0, dist: 0, atStop: false, running: true, paused: false, peek: null });
-  state.pos = [CITY.start.lng, CITY.start.lat];
+  const from = state.sel.from || CITY.start;
+  state.pos = state.mode === "gps" && state.fix ? state.fix : [from.lng, from.lat];
   recenter();
   showStop();
   renderDock();
-  if (state.mode === "gps") startGPS();
   say(`Welcome to ${CITY.area}. Follow the yellow line. At each stop, tell me if it's for you.`);
 }
+const firstFix = (ms) => new Promise((res) => {
+  const t0 = Date.now();
+  (function wait() { if (state.fix) return res(state.fix); if (Date.now() - t0 > ms) return res(null); setTimeout(wait, 300); })();
+});
+// keep the screen on during a walk — a web page loses GPS and voice once the phone sleeps
+let wakeLock = null;
+async function keepAwake(on) {
+  try {
+    if (on && !wakeLock && "wakeLock" in navigator) {
+      wakeLock = await navigator.wakeLock.request("screen");
+      wakeLock.addEventListener("release", () => { wakeLock = null; });
+    }
+    if (!on && wakeLock) { await wakeLock.release(); wakeLock = null; }
+  } catch { /* refused (e.g. battery saver) — the screen may sleep */ }
+}
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && state.running) keepAwake(true); });
 // end the walk; quiet = switching course / reset, no summary
 function endWalk(quiet = false) {
   state.running = false; state.paused = false; state.atStop = false;
-  stopGPS(); audioStop();
+  stopGPS(); audioStop(); keepAwake(false);
   if (!quiet) {
     const liked = state.stops.filter((s) => state.feedback[s.id] === 1).length;
     toast(`Walk done — you liked ${liked} of ${state.stops.length} stops`, 5000);
@@ -195,6 +228,8 @@ function renderPlace(p, kicker) {
     src.innerHTML = `${facts ? facts + " · " : ""}From <a href="${p.aboutUrl}" target="_blank" rel="noopener">${p.aboutSource}</a>`;
     src.hidden = false;
   } else src.hidden = true;
+  // a plain link to the place's public hashtag page — no Instagram API, nothing sent from our side
+  el("igLink").href = `https://www.instagram.com/explore/tags/${encodeURIComponent(tagify(nameOf(p)).toLowerCase())}/`;
   show("card");
   updateDistance();
 }
@@ -316,6 +351,10 @@ function findPlace(name) {
     || null;
 }
 
+// redraw every stop marker's state after the stops were re-ordered
+const remark = () => state.stops.forEach((s, j) => markStop(s.id, j < state.i ? "visited" : j === state.i ? "next"
+  : state.feedback[s.id] === 1 ? "liked" : state.feedback[s.id] === 0 ? "skipped" : ""));
+
 // add a place to the walk if the detour is short, else save it to My Trip
 async function handleWant(place, { force = false } = {}) {
   const p = typeof place === "string" ? findPlace(place) : place;
@@ -354,7 +393,7 @@ async function handleWant(place, { force = false } = {}) {
     state.sel = { ...state.sel, stops, reach };
     setRoute(next.path);
     setStops(stops, peek);
-    stops.forEach((s, j) => markStop(s.id, j < state.i ? "visited" : j === state.i ? "next" : state.feedback[s.id] === 1 ? "liked" : state.feedback[s.id] === 0 ? "skipped" : ""));
+    remark();
     renderList();
   } else {
     const minutes = next.seconds / 60 + stops.reduce((s, x) => s + (DWELL[x.type] || 10), 0);
@@ -474,8 +513,20 @@ function weatherTip(near) {
   }
   return null;
 }
+// 📸 a photo spot = a nearby place Qloo rates as popular and tags for views / photography
+// (Qloo's own signals — we never claim it's "popular on Instagram")
+const PHOTO_TAGS = ["photography", "scenic", "viewing platform", "panoramic", "skyline", "sunset view", "street art", "landmark view", "river view"];
+const PHOTO_M = 120, PHOTO_POP = 0.9, PHOTO_GAP_MS = 120000;
+function photoSpot(near) {
+  for (const k of PHOTO_TAGS) for (const { q, d } of near) {
+    if (d > PHOTO_M || (q.popularity ?? 0) < PHOTO_POP) continue;
+    const tag = q.tags.find((t) => t.toLowerCase().includes(k));
+    if (tag) return { q, d, tag };
+  }
+  return null;
+}
 const told = new Set();
-let lastStoryAt = 0, lastTipAt = 0, aroundBusy = false;
+let lastStoryAt = 0, lastTipAt = 0, lastPhotoAt = 0, aroundBusy = false;
 async function checkAround() {
   if (!state.running || state.atStop || state.paused || aroundBusy || !state.pos || isPlaying()) return;
   aroundBusy = true;
@@ -487,6 +538,15 @@ async function checkAround() {
     const near = places.filter((q) => !told.has(q.id) && !onWalk(q))
       .map((q) => ({ q, d: metersBetween(here, [q.lon, q.lat], q.lat) })).sort((a, b) => a.d - b.d);
     const now = Date.now();
+    const ps = now - lastPhotoAt > PHOTO_GAP_MS ? photoSpot(near) : null;
+    if (ps) {
+      told.add(ps.q.id); lastPhotoAt = lastStoryAt = now;
+      const spot = qPlace(ps.q), side = sideOf(ps.q.lon, ps.q.lat);
+      state.photoSpot = { p: spot, at: now };          // a photo taken soon after gets this place's caption
+      toast("📸 Popular photo spot nearby!", 5000);
+      return say(`Photo spot! ${ps.q.name}, ${fmtDist(ps.d)} away${side ? ` on your ${side}` : ""}. It's popular on Qloo and tagged “${ps.tag}”.`,
+        QLOO_SRC, { label: "📷 Take a photo", run: snapPhoto });
+    }
     const tip = now - lastTipAt > TIP_GAP_MS ? weatherTip(near.filter((x) => x.d < TIP_M)) : null;
     if (tip) {
       told.add(tip.q.id); lastTipAt = lastStoryAt = now;
@@ -499,6 +559,32 @@ async function checkAround() {
       say(`${side ? `On your ${side}, ` : "Right here, "}${pass.q.name}. ${sentences(pass.q.story || pass.q.about, 2)}`, QLOO_SRC);
     }
   } finally { aroundBusy = false; }
+}
+
+// ---------- street stories: the street you just turned into, from English Wikipedia (read as is) ----------
+const toldStreets = new Set();
+let lastStreet = null, streetBusy = false, lastStreetTalk = 0;
+async function checkStreet() {
+  if (!state.running || state.atStop || state.paused || streetBusy || !state.pos || isPlaying()) return;
+  if (state.mode === "gps" && !state.posGood) return;
+  const street = streetAt(state.pos[0], state.pos[1]);
+  if (!street || street === lastStreet) return;
+  lastStreet = street;
+  if (toldStreets.has(street)) return;
+  toldStreets.add(street);
+  streetBusy = true;
+  try {
+    const j = await qget(`/api/story?street=${encodeURIComponent(street)}`);
+    if (!state.running || state.atStop) return;
+    await waitQuiet();
+    if (j.story) {
+      lastStreetTalk = Date.now();
+      say(`Now on ${street}. ${j.story}`, { label: `From Wikipedia — ${j.source.title}`, url: j.source.url });
+    } else if (Date.now() - lastStreetTalk > 60000) {     // no article: just the name, now and then
+      lastStreetTalk = Date.now();
+      say(`Now on ${street}.`);
+    }
+  } catch { /* no story this time */ } finally { streetBusy = false; }
 }
 
 // ---------- navigation voice: turns, off-route, progress (from Myeongdong 3D) ----------
@@ -538,6 +624,7 @@ const distToRoute = (a) => state.path.reduce((m, p) => Math.min(m, metersBetween
 let turnIdx = -1, offRoute = false, lastNavTalk = 0, lastPing = Date.now();
 function navTick() {
   if (!state.running || state.paused || state.atStop || !state.pos || isPlaying() || !state.path.length) return;
+  if (state.mode === "gps" && !state.posGood) return;
   const turn = state.mode === "gps" ? gpsUpcomingTurn(state.pos) : upcomingTurn();
   if (turn && turn.i !== turnIdx) { turnIdx = turn.i; playNarration(`Coming up — turn ${turn.dir}.`); return; }
   if (state.mode !== "gps") return;
@@ -579,23 +666,26 @@ function checkArrival() {
 }
 setInterval(() => { updateDistance(); checkNearTrip(); }, 1000);
 setInterval(checkAround, 3000);
+setInterval(checkStreet, 3000);
 setInterval(navTick, 700);
 
 function startGPS() {
   if (!navigator.geolocation) { toast("This browser has no location access."); return; }
   stopGPS();
   toast("📍 Finding you… allow location access");
+  state.fix = null;
   state.gpsWatch = navigator.geolocation.watchPosition((pos) => {
-    const { latitude: lat, longitude: lng } = pos.coords;
-    // heading from the last fix, once you've moved a few metres (for "on your left/right")
-    if (state.pos && metersBetween(state.pos, [lng, lat], lat) > 4) state.heading = bearingTo({ lng: state.pos[0], lat: state.pos[1] }, { lng, lat });
-    state.pos = [lng, lat];
+    const { latitude: lat, longitude: lng, accuracy } = pos.coords;
+    state.posGood = accuracy <= GOOD_FIX_M;   // a jumpy fix moves the dot but triggers nothing
+    // heading from the last good fix, once you've moved a few metres (for "on your left/right")
+    if (state.posGood && state.pos && metersBetween(state.pos, [lng, lat], lat) > 4) state.heading = bearingTo({ lng: state.pos[0], lat: state.pos[1] }, { lng, lat });
+    state.pos = state.fix = [lng, lat];
     follow(lng, lat);
     if (metersBetween(state.pos, [CITY.start.lng, CITY.start.lat], lat) > CITY.maxFromCenterM) {
       toast(`You're outside ${CITY.area} — the guide starts when you get there.`);
       return;
     }
-    if (state.running) checkArrival();
+    if (state.running && state.posGood) { checkOtherStops(); checkArrival(); }
   }, (err) => {
     toast(err.code === 1 ? "📍 Location denied — allow it in the browser settings." : "📍 No location signal yet.", 5000);
   }, { enableHighAccuracy: true, maximumAge: 2000, timeout: 15000 });
@@ -604,6 +694,30 @@ function stopGPS() {
   if (state.gpsWatch != null) navigator.geolocation.clearWatch(state.gpsWatch);
   state.gpsWatch = null;
 }
+// GPS: you reached a later stop first (like Myeongdong 3D) → take it now, re-plan the rest from here
+function checkOtherStops() {
+  if (state.atStop) return;
+  const k = state.stops.findIndex((s, j) => j > state.i && metersBetween(state.pos, [s.lng, s.lat], s.lat) < OTHER_STOP_M);
+  if (k < 0) return;
+  const stops = state.stops.slice(), reach = (state.sel.reach || []).slice();
+  stops.splice(state.i, 0, ...stops.splice(k, 1));
+  reach.splice(state.i, 0, ...reach.splice(k, 1));
+  state.stops = stops; state.sel = { ...state.sel, stops, reach };
+  setStops(stops, peek); remark();
+  toast(`📍 You found ${nameOf(stops[state.i])} first — re-planning the rest`);
+  arrive();
+  replanRest();
+}
+async function replanRest() {
+  const rest = state.stops.slice(state.i + 1);
+  if (!rest.length || !state.pos) return;
+  const next = await fetchWalkPath({ lng: state.pos[0], lat: state.pos[1] }, rest, WALK_M_PER_MIN);
+  if (!state.running) return;
+  const cum = cumulative(next.path);
+  Object.assign(state, { path: next.path, cum, len: cum[cum.length - 1] || 0, dist: 0 });
+  state.sel = { ...state.sel, reach: [...state.sel.reach.slice(0, state.i + 1), ...rest.map((s, j) => next.waypoints?.[j + 1] || [s.lng, s.lat])] };
+  setRoute(next.path);
+}
 function setMode(mode) {
   state.mode = mode;
   document.querySelectorAll("#modeToggle button").forEach((b) => b.classList.toggle("on", b.dataset.mode === mode));
@@ -611,22 +725,34 @@ function setMode(mode) {
 }
 
 // ---------- snap & post ----------
-// tag the photo with the stop you're at, or the one you just left
-function photoPlace() {
-  if (state.atStop && current()) return nameOf(current());
-  for (const p of [state.lastStop, current()]) {
-    if (p && state.pos && metersBetween(state.pos, [p.lng, p.lat], p.lat) < 150) return nameOf(p);
-  }
-  return CITY.area;
+function snapPhoto() { el("camInput").value = ""; el("camInput").click(); }
+// the place a photo belongs to: the stop you're at, a photo spot the guide just pointed out,
+// or the stop you just left — null when you're nowhere in particular
+function photoTarget() {
+  if (state.atStop && current()) return current();
+  const near = (p, m) => p && state.pos && metersBetween(state.pos, [p.lng, p.lat], p.lat) < m;
+  const ps = state.photoSpot;
+  if (ps && Date.now() - ps.at < 10 * 60000 && near(ps.p, 200)) return ps.p;
+  return [state.lastStop, current()].find((p) => near(p, 150)) || null;
 }
 const tagify = (s) => s.replace(/&/g, "and").replace(/[^\p{L}\p{N}]+/gu, "");
-// q = the place's Qloo entry, if Qloo knows it: its one-line description + review keywords as hashtags
-function defaultCaption(place, q) {
-  const words = (q?.keywords || []).filter((k) => !place.toLowerCase().includes(k.toLowerCase())).slice(0, 3);
-  const tags = [place !== CITY.area && tagify(place), ...words.map(tagify), ...CITY.hashtags, "TasteWalk"].filter(Boolean);
-  const where = place === CITY.area ? place : `${place}, ${CITY.area}`;
-  return `📍 ${where}${q?.about ? `\n${sentences(q.about, 1)}` : ""}\n\n${[...new Set(tags)].map((t) => "#" + t).join(" ")}`;
+// Qloo tags that say nothing about a place (payments, access, amenities…) stay out of the hashtags
+const BORING = /wheelchair|accessib|credit|debit|card|payment|nfc|cash|parking|restroom|toilet|elevator|minibar|towel|laundry|hair dryer|wi-?fi|onsite|reservation|ticket|morning|afternoon|evening|^night|foot traffic|destination|tourist attraction|city center|^place$|\d/i;
+function hashtags(place, q) {
+  const words = [...(q?.tags || []), ...(q?.keywords || [])]
+    .filter((w) => !BORING.test(w) && !place.toLowerCase().includes(w.toLowerCase())).slice(0, 4);
+  const seen = new Set();
+  return [place !== CITY.area && place, ...words, ...CITY.hashtags, "TasteWalk"].filter(Boolean).map(tagify)
+    .filter((t) => t && !seen.has(t.toLowerCase()) && seen.add(t.toLowerCase()));
 }
+// title / content / tags, filled from Qloo's data for the place (q) when Qloo knows it
+function fillPost(place, q) {
+  el("postTitle").value = place === CITY.area ? `📍 ${CITY.area}` : `📍 ${place}, ${CITY.area}`;
+  el("postBody").value = q?.about ? sentences(q.about, 1) : "";
+  el("postTags").value = hashtags(place, q).map((t) => "#" + t).join(" ");
+}
+const caption = () => [[el("postTitle").value, el("postBody").value].map((s) => s.trim()).filter(Boolean).join("\n"), el("postTags").value.trim()]
+  .filter(Boolean).join("\n\n");
 function compressImage(file, maxW = 1080) {
   return new Promise((res, rej) => {
     const url = URL.createObjectURL(file), im = new Image();
@@ -645,40 +771,39 @@ async function onPhoto(e) {
   if (!f) return;
   let dataUrl;
   try { dataUrl = await compressImage(f); } catch { toast("Couldn't read that photo"); return; }
-  const place = photoPlace();
+  const target = photoTarget(), place = target ? nameOf(target) : CITY.area;
   state.photo = { dataUrl, place };
-  const stop = state.stops.find((s) => nameOf(s) === place);
-  if (stop) track("photo", stop, { course: state.course?.id });
+  if (target && state.stops.includes(target)) track("photo", target, { course: state.course?.id });
   el("postImg").src = dataUrl;
-  const ta = el("postText");
-  ta.value = defaultCaption(place); ta.dataset.edited = "";
+  fillPost(place, target?.q);
+  state.postEdited = false;
   show("post");
-  // caption from Qloo's data for the place (the photo itself never leaves the device);
-  // keep the template if Qloo doesn't know it or the user already typed
-  if (stop) {
+  // fill from Qloo's data for the place (the photo itself never leaves the device);
+  // keep what's there if Qloo doesn't know it or the user already typed
+  if (target && target.q === undefined) {
     el("postHint").textContent = "Looking the place up on Qloo…";
     try {
-      const q = await qlooMatch(stop);
-      if (q && !ta.dataset.edited) ta.value = defaultCaption(place, q);
+      const q = await qlooMatch(target);
+      if (q && !state.postEdited) fillPost(place, q);
     } catch { /* template stays */ }
   }
-  el("postHint").textContent = "Sharing copies your caption — paste it in Instagram and add the location there.";
+  el("postHint").textContent = "Post to Instagram opens your share menu with the photo — the caption is copied, paste it in Instagram.";
 }
 async function copyCaption() {
-  try { await navigator.clipboard.writeText(el("postText").value); return true; } catch { return false; }
+  try { await navigator.clipboard.writeText(caption()); return true; } catch { return false; }
 }
 function savePhoto() {
   const a = document.createElement("a");
   a.href = state.photo.dataUrl; a.download = `tastewalk-${Date.now()}.jpg`; a.click();
 }
 async function sharePost() {
-  const caption = el("postText").value;
+  const text = caption();
   const copied = await copyCaption();
   const blob = await (await fetch(state.photo.dataUrl)).blob();
   const file = new File([blob], "tastewalk.jpg", { type: "image/jpeg" });
   if (navigator.canShare?.({ files: [file] })) {
     try {
-      await navigator.share({ files: [file], text: caption });
+      await navigator.share({ files: [file], text });
       toast(copied ? "Caption copied — paste it in Instagram" : "Shared");
     } catch (err) { if (err.name !== "AbortError") toast("Couldn't open the share menu"); }
     return;
@@ -715,9 +840,8 @@ async function fetchWeather() {
 function wire() {
   el("yesBtn").addEventListener("click", () => judge(shown(), true));
   el("noBtn").addEventListener("click", () => judge(shown(), false));
-  const snap = () => { el("camInput").value = ""; el("camInput").click(); };
-  el("camBtn").addEventListener("click", snap);
-  el("snapBtn").addEventListener("click", snap);
+  el("camBtn").addEventListener("click", snapPhoto);
+  el("snapBtn").addEventListener("click", snapPhoto);
   el("camInput").addEventListener("change", onPhoto);
   el("startBtn").addEventListener("click", () => (state.running ? endWalk() : startWalk()));
   el("pauseBtn").addEventListener("click", () => {
@@ -756,7 +880,7 @@ function wire() {
   show("consent", consent() === null);
   el("recenterBtn").addEventListener("click", () => { recenter(); if (state.pos) follow(state.pos[0], state.pos[1]); });
   document.querySelectorAll("#modeToggle button").forEach((b) => b.addEventListener("click", () => setMode(b.dataset.mode)));
-  el("postText").addEventListener("input", (e) => { e.target.dataset.edited = "1"; });
+  for (const id of ["postTitle", "postBody", "postTags"]) el(id).addEventListener("input", () => { state.postEdited = true; });
   el("shareBtn").addEventListener("click", sharePost);
   el("copyBtn").addEventListener("click", async () => toast((await copyCaption()) ? "Caption copied" : "Select the text to copy it"));
   el("saveBtn").addEventListener("click", savePhoto);

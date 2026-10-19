@@ -4,6 +4,7 @@
 //   GET /api/qloo/search?q=<name>              -> Qloo places in the walking area matching a name
 //   GET /api/qloo/similar?ids=<id,id>&take=<n> -> Qloo places in the area with taste affinity to those places
 //   GET /api/qloo/nearby?lat=<lat>&lon=<lon>   -> Qloo places within NEARBY_M of a point (stories + tips while walking)
+//   GET /api/story?street=<name>               -> the street's English Wikipedia summary, first sentences, read as is (no LLM)
 // Run: node --env-file=.env server.mjs   (PORT, default 8888)
 import http from "node:http";
 import { readFile } from "node:fs/promises";
@@ -40,6 +41,7 @@ const place = (e) => ({
   lat: e.location.lat, lon: e.location.lon,
   address: e.properties?.address ?? null,
   affinity: e.query?.affinity ?? null,
+  popularity: e.popularity ?? null,
   tags: (e.tags || []).map((t) => t.name),
   about: e.properties?.short_description || e.properties?.description || null,
   story: e.properties?.unique_selling_points || e.properties?.neighborhood_description || null,
@@ -75,8 +77,36 @@ async function qlooRoute(path, u) {
   return Response.json({ error: "not found" }, { status: 404 });
 }
 
+// ---------- street stories: English Wikipedia, CC BY-SA 4.0 (the app shows the source link) ----------
+// "<street> (Berlin)" first — many street names exist in several cities; the
+// text must mention Berlin. No English article → no story (the app says the name only).
+const UA = { "User-Agent": "TasteWalk/0.1 (Qloo Agentic Hackathon demo; https://github.com/gracelee087/qloo-walk)" };
+const stories = new Map();       // street -> Promise of { story, source } | { story: null }
+async function wikiSummary(title) {
+  const r = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title.replace(/ /g, "_"))}`,
+    { headers: UA, signal: AbortSignal.timeout(6000) }).catch(() => null);
+  if (!r?.ok) return null;
+  const s = await r.json();
+  return s.type === "disambiguation" || !s.extract ? null : s;
+}
+async function streetStory(street) {
+  for (const title of [`${street} (${CITY.area})`, street]) {
+    const s = await wikiSummary(title);
+    if (!s || !s.extract.includes(CITY.area)) continue;
+    const story = (s.extract.match(/[^.!?]+[.!?]+(\s|$)/g) || [s.extract]).slice(0, 2).join("").trim();
+    return { story, source: { title: s.title, url: s.content_urls?.desktop?.page } };
+  }
+  return { story: null };
+}
+
 async function api(req, u) {
   const [, , name, sub] = u.pathname.split("/");     // /api/<name>[/<sub>]
+  if (name === "story" && req.method === "GET") {
+    const street = (u.searchParams.get("street") || "").trim().slice(0, 80);
+    if (!street) return Response.json({ error: "street required" }, { status: 400 });
+    if (!stories.has(street)) stories.set(street, streetStory(street).catch(() => { stories.delete(street); return { story: null }; }));
+    return Response.json(await stories.get(street));
+  }
   if (name === "qloo" && req.method === "GET") {
     try { return await qlooRoute(sub, u); }
     catch (e) { console.error("qloo:", e.message); return Response.json({ error: "qloo unavailable" }, { status: 502 }); }

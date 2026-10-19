@@ -38,6 +38,7 @@
       <h2 id="stopName"></h2>
       <p class="blurb" id="stopBlurb"></p>
       <p class="src" id="stopSrc" hidden></p>
+      <a class="ig" id="igLink" target="_blank" rel="noopener">📷 See it on Instagram</a>
       <p class="why" id="stopWhy" hidden></p>
       <div class="actions">
         <button class="act no" id="noBtn" title="Skip — not for me">✕<small>Skip</small></button>
@@ -98,10 +99,14 @@
   <div class="modal" id="post" hidden>
     <div class="post-card">
       <img id="postImg" alt="Your photo" />
-      <label class="post-label" for="postText">Caption</label>
-      <textarea id="postText" rows="5"></textarea>
+      <label class="post-label" for="postTitle">Title</label>
+      <input class="post-in" id="postTitle" maxlength="120" />
+      <label class="post-label" for="postBody">Content</label>
+      <textarea id="postBody" rows="3"></textarea>
+      <label class="post-label" for="postTags">Tags</label>
+      <input class="post-in" id="postTags" />
       <p class="hint" id="postHint"></p>
-      <button class="primary" id="shareBtn">Share to Instagram</button>
+      <button class="primary" id="shareBtn">Post to Instagram</button>
       <div class="row">
         <button class="link" id="copyBtn">Copy caption</button>
         <button class="link" id="saveBtn">Save photo</button>

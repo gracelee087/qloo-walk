@@ -93,6 +93,28 @@ export function follow(lng, lat, heading) {
 
 export function recenter() { S.following = true; S.lastPan = 0; }
 
+// the named street the walker is on (nearest street line within maxM), read from the loaded map tiles
+export function streetAt(lng, lat, maxM = 25) {
+  if (!S.map) return null;
+  const k = Math.cos((lat * Math.PI) / 180), m = (a) => [(a[0] - lng) * 111320 * k, (a[1] - lat) * 111320];
+  const segDist = (a, b) => {
+    const [ax, ay] = m(a), [bx, by] = m(b), dx = bx - ax, dy = by - ay, l2 = dx * dx + dy * dy;
+    const t = l2 ? Math.max(0, Math.min(1, -(ax * dx + ay * dy) / l2)) : 0;
+    return Math.hypot(ax + t * dx, ay + t * dy);
+  };
+  let best = null, bd = maxM;
+  for (const f of S.map.querySourceFeatures("omt", { sourceLayer: "transportation_name" })) {
+    const name = f.properties.name;
+    if (!name) continue;
+    const lines = f.geometry.type === "LineString" ? [f.geometry.coordinates] : f.geometry.type === "MultiLineString" ? f.geometry.coordinates : [];
+    for (const ln of lines) for (let i = 1; i < ln.length; i++) {
+      const d = segDist(ln[i - 1], ln[i]);
+      if (d < bd) { bd = d; best = name; }
+    }
+  }
+  return best;
+}
+
 // keep the walker in the visible part of the map, clear of the dock and sidebar
 export function setInsets({ bottom = 0, right = 0 }) { S.map?.setPadding({ top: 70, bottom, left: 0, right }); }
 
