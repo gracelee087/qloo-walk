@@ -47,6 +47,7 @@ const place = (e) => ({
   story: e.properties?.unique_selling_points || e.properties?.neighborhood_description || null,
   keywords: (e.properties?.keywords || []).slice(0, 5).map((k) => k.name),
   image: e.properties?.image?.url ?? null,
+  images: [...new Set([e.properties?.image?.url, ...(e.properties?.images || []).map((i) => i.url)].filter(Boolean))].slice(0, 5),
 });
 
 async function qlooRoute(path, u) {

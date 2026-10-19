@@ -31,7 +31,9 @@
   <!-- the place you're at / tapped — floats left on desktop, above the dock on phones -->
   <section class="card" id="card" hidden>
     <button class="card-close" id="cardClose" title="Close">✕</button>
-    <img class="stop-img" id="stopImg" alt="" hidden />
+    <!-- swipe sideways: the place's photo, Qloo's photos, then its Instagram page -->
+    <div class="gallery" id="gallery"></div>
+    <span class="gallery-count" id="galleryCount"></span>
     <div class="card-body">
       <button class="link back" id="backBtn" hidden>← Back to your next stop</button>
       <p class="kicker"><span id="stopIdx"></span> · <span id="stopMeta"></span></p>

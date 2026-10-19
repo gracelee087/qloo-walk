@@ -219,8 +219,7 @@ const sentences = (t, n) => (t.match(/[^.!?]+[.!?]+(\s|$)/g) || [t]).slice(0, n)
 function renderPlace(p, kicker) {
   el("stopIdx").textContent = kicker;
   el("stopName").textContent = nameOf(p);
-  const img = el("stopImg");
-  if (p.image) { img.src = p.image; img.hidden = false; } else { img.hidden = true; img.removeAttribute("src"); }
+  renderGallery(p);
   const facts = [p.menu && `Serves ${p.menu}.`, p.hours && `Hours: ${p.hours}`].filter(Boolean).join(" ");
   el("stopBlurb").textContent = p.about ? sentences(p.about, 3) : facts;
   const src = el("stopSrc");
@@ -228,10 +227,36 @@ function renderPlace(p, kicker) {
     src.innerHTML = `${facts ? facts + " · " : ""}From <a href="${p.aboutUrl}" target="_blank" rel="noopener">${p.aboutSource}</a>`;
     src.hidden = false;
   } else src.hidden = true;
-  // a plain link to the place's public hashtag page — no Instagram API, nothing sent from our side
-  el("igLink").href = `https://www.instagram.com/explore/tags/${encodeURIComponent(tagify(nameOf(p)).toLowerCase())}/`;
+  el("igLink").href = igUrl(p);
   show("card");
   updateDistance();
+}
+// a plain link to the place's public hashtag page — no Instagram API, nothing sent from our side
+const igUrl = (p) => `https://www.instagram.com/explore/tags/${encodeURIComponent(tagify(nameOf(p)).toLowerCase())}/`;
+
+// card photos, swiped sideways: the place's own photo, then Qloo's photos of it, then its Instagram page
+function renderGallery(p) {
+  const g = el("gallery");
+  g.innerHTML = ""; g.scrollLeft = 0;
+  const addPhoto = (url, label) => {
+    const s = document.createElement("div");
+    s.className = "slide"; s.innerHTML = `<img src="${url}" alt="" loading="lazy" /><small>${label}</small>`;
+    g.insertBefore(s, g.querySelector(".ig-slide"));
+  };
+  const ig = Object.assign(document.createElement("a"), { className: "slide ig-slide", href: igUrl(p), target: "_blank", rel: "noopener" });
+  ig.innerHTML = `📷 See it on Instagram<span>#${tagify(nameOf(p)).toLowerCase()} — photos & reels</span>`;
+  g.append(ig);
+  if (p.image) addPhoto(p.image, p.q && p.image === p.q.image ? "Photo: Qloo" : `Photo: ${p.aboutSource || "Wikipedia"}`);
+  countSlides();
+  qlooMatch(p).then((q) => {
+    if (!q || shown() !== p) return;
+    for (const url of q.images || []) if (url !== p.image) addPhoto(url, "Photo: Qloo");
+    countSlides();
+  }).catch(() => { /* no Qloo photos this time */ });
+}
+function countSlides() {
+  const g = el("gallery"), n = g.children.length, k = Math.round(g.scrollLeft / (g.clientWidth || 1)) + 1;
+  el("galleryCount").textContent = n > 1 ? `${Math.min(k, n)} / ${n} ›` : "";
 }
 function showStop() {
   const p = current();
@@ -453,11 +478,15 @@ function qPlace(q) {
   const type = (TYPE_BY_TAG.find(([re]) => q.tags.some((t) => re.test(t))) || [, "attraction"])[1];
   return { id: "qloo:" + q.id, qid: q.id, q, enName: q.name, title: q.name, lng: q.lon, lat: q.lat, type, image: q.image || "", about: q.about || "" };
 }
-// the Qloo entry for one of our places: same name, within 150 m
+// the Qloo entry for one of our places: within 150 m AND the same name (one contains the other) —
+// "Fernsehturm Berlin" must not turn into the "Café am Fernsehturm" next door
+const normName = (s) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, "");
 async function qlooMatch(p) {
   if (p.q !== undefined) return p.q;
   const j = await qget(`/api/qloo/search?q=${encodeURIComponent(nameOf(p))}`);
-  p.q = j.places.find((q) => metersBetween([p.lng, p.lat], [q.lon, q.lat], p.lat) < 150) || null;
+  const mine = [p.enName, p.title].filter(Boolean).map(normName);
+  const same = (q) => mine.some((n) => { const o = normName(q.name); return n === o || (o.length >= 5 && n.includes(o)) || (n.length >= 5 && o.includes(n)); });
+  p.q = j.places.find((q) => same(q) && metersBetween([p.lng, p.lat], [q.lon, q.lat], p.lat) < 150) || null;
   if (p.q) p.qid = p.q.id;
   return p.q;
 }
@@ -854,6 +883,7 @@ function wire() {
   el("resetBtn").addEventListener("click", () => state.sel && selectPlan(state.sel));
   el("backBtn").addEventListener("click", showStop);
   el("cardClose").addEventListener("click", () => { state.peek = null; show("card", false); });
+  el("gallery").addEventListener("scroll", countSlides, { passive: true });
   // sidebar: fold away on desktop, slide up as a drawer on phones
   const setSide = (open) => { document.body.classList.toggle("side-closed", !open); show("sideOpen", !open); layout(); };
   el("sideFold").addEventListener("click", () => setSide(false));
