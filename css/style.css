@@ -242,6 +242,17 @@ h2 { font-size: 22px; line-height: 1.15; font-weight: 800; letter-spacing: -0.02
 }
 .consent p { margin: 8px 0 12px; font-size: 13px; color: #d6dcea; }
 .consent .row { display: flex; justify-content: flex-end; gap: 8px; margin: 0; }
+#tripPop { z-index: 810; }
+body:has(#tripPop:not([hidden])) .toast { top: calc(230px + env(safe-area-inset-top)); }
+.trip-pane { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.trip-pane .side-list { flex: none; }
+.trip-pane #tripList { flex: 1; }
+.trip-search { display: flex; gap: 6px; padding: 8px 10px 4px; }
+.trip-search input {
+  flex: 1; min-width: 0; padding: 9px 12px; border-radius: 12px; border: 1px solid var(--line);
+  background: var(--glass-2); color: var(--ink); font: 14px var(--sans);
+}
+.trip-search .btn { flex: none; width: auto; padding: 9px 14px; }
 .side-note b { color: var(--ink); }
 .side-note .link { padding: 0; font-size: 12px; }
 

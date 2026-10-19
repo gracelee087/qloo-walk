@@ -414,6 +414,7 @@ async function handleWant(place, { force = false } = {}) {
   const extraMin = Math.max(1, Math.round((next.seconds - base.seconds) / 60));
   if (!force && next.seconds - base.seconds > TOO_FAR_S) {
     saveToTrip(p);
+    toast(`⭐ ${nameOf(p)} is ~${extraMin} min off the walk — saved to Trip for later`, 5000);
     return say(`${nameOf(p)} is about ${extraMin} min out of the way, so I saved it to your trip list ⭐ — I'll give you a shout when you're near it.`);
   }
   // re-plan from here: walked stops stay, the rest follows the new route
@@ -432,6 +433,7 @@ async function handleWant(place, { force = false } = {}) {
     selectPlan({ ...state.sel, stops, path: next.path, cum, len, minutes, reach });
   }
   removeFromTrip(p.id);
+  toast(`＋ ${nameOf(p)} added to the walk (+${extraMin} min)`, 4000);
   say(`Added ${nameOf(p)} — about ${extraMin} more min of walking. It's stop ${done.length + at + 1} now.`);
 }
 
@@ -447,7 +449,7 @@ const tripPlace = (t) => state.pois.find((p) => p.id === t.id) || { id: t.id, en
 function renderTrip() {
   el("tripCount").textContent = state.trip.length;
   const box = el("tripList"); box.innerHTML = "";
-  if (!state.trip.length) { box.innerHTML = `<p class="hint empty">Places you want to see later land here — tap ⭐ Later when the guide suggests one.</p>`; return; }
+  if (!state.trip.length) { box.innerHTML = `<p class="hint empty">Find a place you want to go above: if it's close to your walk it goes in, if it's far it waits here — and I'll tell you when you're near it.</p>`; return; }
   const from = state.pos || [CITY.start.lng, CITY.start.lat];
   for (const t of state.trip) {
     const row = document.createElement("div");
@@ -461,17 +463,43 @@ function renderTrip() {
     box.append(row);
   }
 }
-// walking past a saved place → a friendly nudge, once per place
+// walking past a saved place → a popup, once per place; you choose
 function checkNearTrip() {
-  if (!state.running || !state.pos) return;
+  if (!state.running || !state.pos || !el("tripPop").hidden) return;
   for (const t of state.trip) {
     if (t.alerted) continue;
     const d = metersBetween(state.pos, [t.lng, t.lat], t.lat);
     if (d > NEAR_M) continue;
     t.alerted = true; saveTrip();
-    toast(`⭐ ${t.name} is ${fmtDist(d)} away`, 6000);
-    say(`Psst — ${t.name}, the place you wanted to see, is just ${fmtDist(d)} from here. Want to drop by?`,
-      null, { label: "＋ Add to the walk", run: () => handleWant(tripPlace(t), { force: true }) });
+    el("tripPopText").textContent = `${t.name} is just ${fmtDist(d)} from here. Add it to this walk now?`;
+    el("tripPopAdd").onclick = () => { show("tripPop", false); handleWant(tripPlace(t), { force: true }); };
+    el("tripPopLater").onclick = () => { show("tripPop", false); toast(`⭐ ${t.name} stays in your Trip`); };
+    show("tripPop");
+    say(`Psst — ${t.name}, a place you saved earlier, is just ${fmtDist(d)} from here. Want to add it to the walk?`);
+    return;
+  }
+}
+
+// Trip tab: find a place you want to go (Qloo search), then it goes in the walk or waits in Trip
+async function findForTrip(q) {
+  const box = el("tripResults");
+  q = q.trim();
+  if (!q) { box.innerHTML = ""; return; }
+  box.innerHTML = `<p class="hint empty">Looking on Qloo…</p>`;
+  let places;
+  try { places = (await qget(`/api/qloo/search?q=${encodeURIComponent(q)}`)).places; }
+  catch { box.innerHTML = `<p class="hint empty">Couldn't reach Qloo — try again in a moment.</p>`; return; }
+  box.innerHTML = places.length ? "" : `<p class="hint empty">No place called “${q.replace(/[<&]/g, "")}” in ${CITY.area} on Qloo.</p>`;
+  const from = state.pos || [CITY.start.lng, CITY.start.lat];
+  for (const x of places) {
+    const p = qPlace(x), row = document.createElement("div");
+    row.className = "spot";
+    row.innerHTML = `${x.image ? `<img src="${x.image}" alt="" loading="lazy" />` : `<i>${TYPE_ICON[p.type] || "📍"}</i>`}
+      <div class="spot-text"><b></b><small>${fmtDist(metersBetween(from, [x.lon, x.lat], x.lat))} away</small></div>
+      <button class="mini yes" title="I want to go here">＋</button>`;
+    row.querySelector("b").textContent = x.name;
+    row.querySelector(".yes").addEventListener("click", () => { box.innerHTML = ""; el("tripQ").value = ""; handleWant(p); });
+    box.append(row);
   }
 }
 
@@ -517,7 +545,7 @@ async function suggestFromLike(p) {
     await waitQuiet();
     say(`Since you liked ${nameOf(p)}: people with that taste also like ${pick.x.name}, ${fmtDist(pick.d)} from here.${pick.x.about ? " " + sentences(pick.x.about, 1) : ""}`,
       TASTE_SRC, [
-        { label: "＋ Add to the walk", run: () => handleWant(place, { force: true }) },
+        { label: "＋ Add to the walk", run: () => handleWant(place) },
         { label: "⭐ Later", run: () => { saveToTrip(place); toast(`⭐ Saved ${pick.x.name}`); } },
       ]);
   } catch { /* Qloo unavailable — no suggestion this time */ }
@@ -903,6 +931,7 @@ function wire() {
   });
   // sidebar tabs: spots · the guide's log · My Trip
   document.querySelectorAll(".tab").forEach((b) => b.addEventListener("click", () => setTab(b.dataset.tab)));
+  el("tripSearch").addEventListener("submit", (e) => { e.preventDefault(); findForTrip(el("tripQ").value); });
   renderTrip();
   // opt-in insights: ask once, changeable + deletable from the sidebar
   const renderShare = () => { el("shareState").textContent = consent() === "yes" ? "on" : "off"; };
