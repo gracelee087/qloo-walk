@@ -7,6 +7,7 @@
 //   GET /api/qloo/course?lat=<lat>&lon=<lon>[&ids=<id,id>] -> Qloo places within COURSE_M to build walks from
 //                                               (with ids: ranked by taste affinity to those places — the "For you" walk)
 //   GET /api/story?street=<name>               -> the street's English Wikipedia summary, first sentences, read as is (no LLM)
+//   POST /api/tts {text}                       -> the guide's line as ElevenLabs speech (audio/mpeg); the key stays here
 // Run: node --env-file=.env server.mjs   (PORT, default 8888)
 import http from "node:http";
 import { readFile } from "node:fs/promises";
@@ -121,8 +122,47 @@ async function streetStory(street) {
   return { story: null };
 }
 
+// ---------- the guide's voice: ElevenLabs (voice "Amelia", as in Myeongdong 3D) ----------
+// The demo is public, so a daily character budget caps what strangers can spend;
+// over budget (or no key) the app falls back to the browser's own voice.
+const VOICE = "ZF6FPAbjXT4488VcRRnw", TTS_MODEL = "eleven_v4_turbo";
+const TTS_DAILY_CHARS = Number(process.env.TTS_DAILY_CHARS) || 20000;
+const voiced = new Map();        // text -> Promise of mp3 Buffer (the same lines repeat a lot)
+let budget = { day: "", used: 0 };
+async function tts(text) {
+  const r = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${VOICE}?output_format=mp3_44100_64`, {
+    method: "POST", signal: AbortSignal.timeout(15000),
+    headers: { "xi-api-key": process.env.ELEVENLABS_API_KEY, "content-type": "application/json", accept: "audio/mpeg" },
+    body: JSON.stringify({ text, model_id: TTS_MODEL, voice_settings: { stability: 0.5, similarity_boost: 0.8 } }),
+  });
+  if (!r.ok) throw new Error(`elevenlabs ${r.status}`);
+  return Buffer.from(await r.arrayBuffer());
+}
+async function speech(req) {
+  if (!process.env.ELEVENLABS_API_KEY) return Response.json({ error: "no voice configured" }, { status: 503 });
+  const chunks = [];
+  for await (const c of req) chunks.push(c);
+  const text = String(JSON.parse(Buffer.concat(chunks).toString() || "{}").text || "").trim().slice(0, 600);
+  if (!text) return Response.json({ error: "text required" }, { status: 400 });
+  if (!voiced.has(text)) {
+    const day = new Date().toISOString().slice(0, 10);
+    if (budget.day !== day) budget = { day, used: 0 };
+    if (budget.used + text.length > TTS_DAILY_CHARS) return Response.json({ error: "voice budget used up for today" }, { status: 429 });
+    budget.used += text.length;
+    if (voiced.size > 300) voiced.delete(voiced.keys().next().value);
+    voiced.set(text, tts(text).catch((e) => { voiced.delete(text); throw e; }));
+  }
+  try {
+    return new Response(await voiced.get(text), { headers: { "content-type": "audio/mpeg", "cache-control": "no-store" } });
+  } catch (e) {
+    console.error("tts:", e.message);
+    return Response.json({ error: "voice unavailable" }, { status: 502 });
+  }
+}
+
 async function api(req, u) {
   const [, , name, sub] = u.pathname.split("/");     // /api/<name>[/<sub>]
+  if (name === "tts" && req.method === "POST") return speech(req);
   if (name === "story" && req.method === "GET") {
     const street = (u.searchParams.get("street") || "").trim().slice(0, 80);
     if (!street) return Response.json({ error: "street required" }, { status: 400 });
