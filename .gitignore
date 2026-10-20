@@ -14,6 +14,7 @@ dist/
 # local dev scratch
 _shot.mjs
 *.png
+!docs/*.png
 
 # os / editor
 .DS_Store
