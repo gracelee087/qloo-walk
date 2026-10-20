@@ -4,6 +4,8 @@
 //   GET /api/qloo/search?q=<name>              -> Qloo places in the walking area matching a name
 //   GET /api/qloo/similar?ids=<id,id>&take=<n> -> Qloo places in the area with taste affinity to those places
 //   GET /api/qloo/nearby?lat=<lat>&lon=<lon>   -> Qloo places within NEARBY_M of a point (stories + tips while walking)
+//   GET /api/qloo/course?lat=<lat>&lon=<lon>[&ids=<id,id>] -> Qloo places within COURSE_M to build walks from
+//                                               (with ids: ranked by taste affinity to those places — the "For you" walk)
 //   GET /api/story?street=<name>               -> the street's English Wikipedia summary, first sentences, read as is (no LLM)
 // Run: node --env-file=.env server.mjs   (PORT, default 8888)
 import http from "node:http";
@@ -21,6 +23,9 @@ const TYPES = { ".html": "text/html; charset=utf-8", ".css": "text/css", ".js": 
 const FUNCTIONS = ["route"];
 const SOURCE = "Qloo Insights API (hackathon), via the qloo api CLI";
 const NEARBY_M = 300;
+const COURSE_M = 1500;
+// not walk stops: places to stay, everyday shops, stations, bare addresses, members-only clubs
+const STAY = /hotel|hostel|motel|lodging|apartment|guest house|\bspa\b|electronics|supermarket|grocery|shopping mall|drugstore|pharmacy|station|^building$|social club/i;
 
 const handlers = {};
 for (const f of FUNCTIONS) handlers[f] = (await import(`./netlify/functions/${f}.js`)).default;
@@ -43,12 +48,18 @@ const place = (e) => ({
   affinity: e.query?.affinity ?? null,
   popularity: e.popularity ?? null,
   tags: (e.tags || []).map((t) => t.name),
+  kinds: (e.tags || []).filter((t) => /^urn:tag:(category|genre):place/.test(t.type || "")).map((t) => t.name),
   about: e.properties?.short_description || e.properties?.description || null,
   story: e.properties?.unique_selling_points || e.properties?.neighborhood_description || null,
   keywords: (e.properties?.keywords || []).slice(0, 5).map((k) => k.name),
   image: e.properties?.image?.url ?? null,
   images: [...new Set([e.properties?.image?.url, ...(e.properties?.images || []).map((i) => i.url)].filter(Boolean))].slice(0, 5),
 });
+
+const idList = (u) => (u.searchParams.get("ids") || "").split(",").map((s) => s.trim()).filter((s) => /^[0-9A-F-]{36}$/i.test(s)).slice(0, 5);
+// ~100 m grid so walkers on the same block share one cached Qloo call
+const gridPoint = (u) => ({ lat: Math.round(Number(u.searchParams.get("lat")) * 1000) / 1000,
+  lon: Math.round(Number(u.searchParams.get("lon")) * 1000) / 1000 });
 
 async function qlooRoute(path, u) {
   if (path === "search") {
@@ -58,7 +69,7 @@ async function qlooRoute(path, u) {
     return Response.json({ places: j.filter(inArea).slice(0, 5).map(place), source: SOURCE });
   }
   if (path === "similar") {
-    const ids = (u.searchParams.get("ids") || "").split(",").map((s) => s.trim()).filter((s) => /^[0-9A-F-]{36}$/i.test(s)).slice(0, 5);
+    const ids = idList(u);
     if (!ids.length) return Response.json({ error: "ids required" }, { status: 400 });
     const take = Math.min(Math.max(Number(u.searchParams.get("take")) || 10, 1), 20);
     const j = await qloo(["insights", "-t", "place", "--signal-entities", ids.join(","), "--filter-location", CITY.area, "-n", String(take)]);
@@ -67,13 +78,23 @@ async function qlooRoute(path, u) {
       note: "Affinity is aggregate taste data from Qloo, not a prediction about one person." });
   }
   if (path === "nearby") {
-    // ~100 m grid so walkers on the same block share one cached Qloo call
-    const lat = Math.round(Number(u.searchParams.get("lat")) * 1000) / 1000;
-    const lon = Math.round(Number(u.searchParams.get("lon")) * 1000) / 1000;
+    const { lat, lon } = gridPoint(u);
     if (!inArea({ location: { lat, lon } })) return Response.json({ error: "outside the walking area" }, { status: 400 });
     const j = await qloo(["insights", "-t", "place", "-n", "20",
       "--params", JSON.stringify({ "filter.location": `POINT(${lon} ${lat})`, "filter.location.radius": NEARBY_M })]);
     return Response.json({ places: j.filter((e) => e.location).map(place), source: SOURCE });
+  }
+  if (path === "course") {
+    const { lat, lon } = gridPoint(u), ids = idList(u);
+    if (!inArea({ location: { lat, lon } })) return Response.json({ error: "outside the walking area" }, { status: 400 });
+    const j = await qloo(["insights", "-t", "place", "-n", ids.length ? "30" : "50",
+      ...(ids.length ? ["--signal-entities", ids.join(",")] : []),
+      "--params", JSON.stringify({ "filter.location": `POINT(${lon} ${lat})`, "filter.location.radius": COURSE_M })]);
+    const seen = new Set();      // Qloo can list one place twice under the same name
+    const places = j.filter((e) => e.location && !ids.includes(e.entity_id)).map(place)
+      .filter((p) => !p.kinds.some((k) => STAY.test(k)) && !seen.has(p.name.toLowerCase()) && seen.add(p.name.toLowerCase()));
+    return Response.json({ places, source: SOURCE,
+      ...(ids.length && { note: "Affinity is aggregate taste data from Qloo, not a prediction about one person." }) });
   }
   return Response.json({ error: "not found" }, { status: 404 });
 }

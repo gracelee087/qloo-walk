@@ -18,11 +18,13 @@ const DWELL = { food: 30, culture: 20, attraction: 10, shopping: 10 };
 const TYPE_LABEL = { food: "Food & drink", culture: "Culture", attraction: "Sight", shopping: "Shop" };
 const TYPE_ICON = { food: "🍽️", culture: "🏛️", attraction: "📸", shopping: "🛍️" };
 
-// stop picks are placeholders until Qloo ranks places for the walker's taste
+// stops are picked from Qloo's places around the start (OpenStreetMap places if Qloo is down);
+// "For you" asks Qloo to rank them by taste affinity to the places you said Go to
 const COURSES = [
   { id: "must", icon: "⭐", name: "Must See", note: "Landmarks and museums", n: 8, pick: (p) => p.type === "attraction" || p.type === "culture" },
   { id: "classic", icon: "🧭", name: "Classic", note: "A bit of everything", n: 6, pick: () => true, mix: true },
   { id: "slow", icon: "☕", name: "Slow Down", note: "Fewer stops, food and coffee", n: 4, pick: (p) => p.type === "food" },
+  { id: "foryou", icon: "🎯", name: "For you", note: "Ranked by Qloo for the places you said Go to", n: 6, pick: () => true, mix: true, taste: true },
 ];
 
 const state = {
@@ -54,10 +56,10 @@ function saveFeedback() {
 }
 
 // ---------- courses ----------
-function pickStops(course, from) {
+function pickStops(course, from, pool = state.pois) {
   // nearest first, but a place without a description counts as 400 m farther,
   // so walks favour stops the guide can actually tell you about
-  const near = state.pois.filter(course.pick)
+  const near = pool.filter(course.pick)
     .map((p) => ({ p, d: metersBetween([p.lng, p.lat], [from.lng, from.lat], p.lat) + (p.about ? 0 : 400) }))
     .sort((a, b) => a.d - b.d).map((x) => x.p);
   if (!course.mix) return near.slice(0, course.n);
@@ -73,7 +75,8 @@ function pickStops(course, from) {
 }
 // from = where the walk starts: the demo start, or (GPS) where you are
 async function planCourse(course, from = CITY.start) {
-  const stops = orderStops(from, pickStops(course, from));
+  const pool = course.taste ? await tastePool(from) : state.pois;
+  const stops = orderStops(from, pickStops(course, from, pool));
   const { path, seconds, fallback, waypoints } = await fetchWalkPath(from, stops, WALK_M_PER_MIN);
   const cum = cumulative(path);
   const len = cum[cum.length - 1] || 0;
@@ -82,8 +85,26 @@ async function planCourse(course, from = CITY.start) {
   const reach = stops.map((p, k) => waypoints[k + 1] || [p.lng, p.lat]);
   return { course, from, stops, path, cum, len, minutes, fallback, reach };
 }
+// the places walks are built from: Qloo's places around `from`, or the OSM list if Qloo doesn't answer
+async function loadPool(from) {
+  try {
+    const j = await qget(`/api/qloo/course?lat=${from.lat}&lon=${from.lng}`);
+    if (j.places.length >= 8) return { pois: j.places.map(qPlace), poolSource: "qloo" };
+  } catch { /* Qloo unavailable — fall back */ }
+  return { pois: state.osm, poolSource: "osm" };
+}
+// Qloo ids of places you said Go to (this visit + earlier visits on this device), newest last
+const likedIds = () => [...new Set([...Object.keys(state.feedback).filter((k) => k.startsWith("qloo:") && state.feedback[k] === 1)
+  .map((k) => k.slice(5)), ...qlooLikes])].slice(-5);
+// "For you": the places around `from` that Qloo ranks highest for your Go's — the top 12 to pick stops from
+async function tastePool(from) {
+  const j = await qget(`/api/qloo/course?lat=${from.lat}&lon=${from.lng}&ids=${likedIds().join(",")}`);
+  const taken = new Set(likedIds());
+  return j.places.filter((x) => !taken.has(x.id)).slice(0, 12).map(qPlace);
+}
+const chipText = (c, plan) => `<b>${c.icon} ${c.name}</b><span>${plan.stops.length} stops · ${fmtDist(plan.len)} · ≈ ${fmtMin(plan.minutes)}</span>`;
 // course chips along the bottom; tapping one draws its route and fills the sidebar right away
-async function renderCourseBar() {
+async function renderCourseBar(pool) {
   const bar = el("courseBar"); bar.innerHTML = "";
   for (const c of COURSES) {
     const b = document.createElement("button");
@@ -91,15 +112,41 @@ async function renderCourseBar() {
     b.innerHTML = `<b>${c.icon} ${c.name}</b><span>planning…</span>`;
     bar.append(b);
   }
+  Object.assign(state, await pool);
+  if (state.poolSource === "osm") toast("Qloo didn't answer — these walks use OpenStreetMap places for now", 5000);
   // one route request per course, in turn (the routing server allows 1 request/s)
   for (const [k, c] of COURSES.entries()) {
-    const plan = await planCourse(c), b = bar.children[k];
-    b.innerHTML = `<b>${c.icon} ${c.name}</b><span>${plan.stops.length} stops · ${fmtDist(plan.len)} · ≈ ${fmtMin(plan.minutes)}</span>`;
+    const b = bar.children[k];
+    if (c.taste) {
+      // planned when tapped, from the Go's you've given so far
+      b.innerHTML = `<b>${c.icon} ${c.name}</b><span>Ranked by Qloo for your ○ Go's</span>`;
+      b.title = c.note; b.disabled = false;
+      b.addEventListener("click", () => planForYou(c, b));
+      continue;
+    }
+    const plan = await planCourse(c);
+    b.innerHTML = chipText(c, plan);
     b.title = plan.fallback ? "Routing is unavailable — straight-line estimate" : `${c.note} — walking time + an assumed stay at each stop`;
     b.disabled = false;
     b.addEventListener("click", () => selectPlan(plan));
     if (k === 0) selectPlan(plan);
   }
+}
+async function planForYou(c, b) {
+  if (!likedIds().length) return toast("Tap ○ Go on a few places you like — then Qloo picks a walk for your taste", 4500);
+  b.disabled = true; b.querySelector("span").textContent = "asking Qloo…";
+  try {
+    const from = state.mode === "gps" && state.fix ? { lng: state.fix[0], lat: state.fix[1] } : CITY.start;
+    const plan = await planCourse(c, from);
+    if (!plan.stops.length) throw new Error("no places");
+    b.innerHTML = chipText(c, plan);
+    selectPlan(plan);
+    say(`Here's a walk for your taste: ${plan.stops.length} places Qloo ranks highest for what you said Go to.`, TASTE_SRC);
+  } catch {
+    b.innerHTML = `<b>${c.icon} ${c.name}</b><span>Ranked by Qloo for your ○ Go's</span>`;
+    toast("Qloo is busy — try For you again in a moment");
+  }
+  b.disabled = false;
 }
 function selectPlan(plan) {
   if (state.running) endWalk(true);
@@ -158,7 +205,11 @@ async function startWalk() {
     const away = at && metersBetween(at, [CITY.start.lng, CITY.start.lat], at[1]);
     if (at && away > 150 && away < CITY.maxFromCenterM) {
       toast("📍 Planning the walk from where you are…");
-      selectPlan(await planCourse(state.course, { lng: at[0], lat: at[1] }));
+      const here = { lng: at[0], lat: at[1] };
+      try {
+        if (!state.course.taste) Object.assign(state, await loadPool(here));
+        selectPlan(await planCourse(state.course, here));
+      } catch { toast("Qloo is busy — keeping the walk you picked"); }
     }
   }
   Object.assign(state, { i: 0, dist: 0, atStop: false, running: true, paused: false, peek: null });
@@ -225,6 +276,9 @@ function renderPlace(p, kicker) {
   const src = el("stopSrc");
   if (p.about && p.aboutUrl) {
     src.innerHTML = `${facts ? facts + " · " : ""}From <a href="${p.aboutUrl}" target="_blank" rel="noopener">${p.aboutSource}</a>`;
+    src.hidden = false;
+  } else if (p.about && p.q && p.about === p.q.about) {
+    src.textContent = "From Qloo";
     src.hidden = false;
   } else src.hidden = true;
   show("card");
@@ -506,11 +560,14 @@ async function findForTrip(q) {
 // ---------- Qloo ----------
 const qget = async (path) => { const r = await fetch(path); const j = await r.json(); if (!r.ok) throw new Error(j.error); return j; };
 const waitQuiet = async () => { while (isPlaying()) await new Promise((r) => setTimeout(r, 300)); };
-const TYPE_BY_TAG = [[/restaurant|cafe|coffee|bar|bakery|food|pub|bistro/i, "food"], [/museum|gallery|theat|cinema|club|music|art/i, "culture"],
-  [/shop|store|market|boutique/i, "shopping"]];
-// a Qloo place in the shape the walk uses
+// in this order: the TV Tower has a restaurant, but it's a landmark first
+const TYPE_BY_TAG = [[/museum|gallery|theat|cinema|club|music|\bart\b/i, "culture"],
+  [/landmark|monument|memorial|cathedral|church|fountain|plaza|square|palace|tower/i, "attraction"],
+  [/restaurant|cafe|coffee|bar|bakery|food|pub|bistro|diner|burger/i, "food"], [/shop|store|market|boutique|mall/i, "shopping"]];
+// a Qloo place in the shape the walk uses; its kind of place first (a museum with a café is still a museum)
 function qPlace(q) {
-  const type = (TYPE_BY_TAG.find(([re]) => q.tags.some((t) => re.test(t))) || [, "attraction"])[1];
+  const words = q.kinds?.length ? q.kinds : q.tags;
+  const type = (TYPE_BY_TAG.find(([re]) => words.some((t) => re.test(t))) || [, "attraction"])[1];
   return { id: "qloo:" + q.id, qid: q.id, q, enName: q.name, title: q.name, lng: q.lon, lat: q.lat, type, image: q.image || "", about: q.about || "" };
 }
 // the Qloo entry for one of our places: within 150 m AND the same name (one contains the other) —
@@ -968,14 +1025,14 @@ function layout() {
 
 async function boot() {
   try {
-    const pois = await fetch("./data/area-pois.json").then((r) => r.json());
-    state.pois = pois.pois;
+    state.osm = (await fetch("./data/area-pois.json").then((r) => r.json())).pois;
+    const pool = loadPool(CITY.start);     // ~5 s — asked while the map loads
     const theme = guessTheme();
     document.documentElement.dataset.theme = theme;
     await initMap(el("map"), CITY.start, theme);
     wire();
     layout();
-    renderCourseBar();
+    renderCourseBar(pool);
     renderEnv(); fetchWeather();
     setInterval(renderEnv, 30000); setInterval(fetchWeather, 600000);
     el("overlay").classList.add("hidden");

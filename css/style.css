@@ -153,6 +153,8 @@ h2 { font-size: 22px; line-height: 1.15; font-weight: 800; letter-spacing: -0.02
 .chip-course.on { background: var(--grad); border-color: transparent; box-shadow: 0 6px 20px rgba(79, 140, 255, 0.45); }
 .chip-course.on span { color: rgba(255, 255, 255, 0.85); }
 .chip-course:disabled { opacity: 0.6; cursor: progress; }
+/* desktop: the four chips share the row instead of hiding the last one off the edge */
+@media (min-width: 900px) { .chip-course { flex: 0 1 auto; min-width: 0; padding: 10px 12px; } }
 .dock {
   display: flex; gap: 6px; padding: 8px; border-radius: 18px; max-width: 100%;
   background: var(--glass); backdrop-filter: blur(14px); border: 1px solid var(--line);
