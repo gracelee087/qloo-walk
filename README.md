@@ -16,7 +16,7 @@ A good local friend would notice what you like on the way and change the plan. T
 - You walk; the guide **talks to you** (turn hints, the place you're passing, the street you're on, weather tips, photo spots).
 - On each stop you tap **○ Go** or **✕ Skip**. Those taps are taste signals.
 - Qloo turns them into a **"For you" walk** — the places around you that people with the same taste like most.
-- Places you want but that are too far away go to your **Trip** list; when you later walk near one, the guide asks if you want to add it now.
+- Places you want but that are too far away go to your **Trip** list; when you later walk near one, the guide adds it to the walk.
 
 ## What Qloo does in the app (and why it fits)
 
@@ -91,10 +91,8 @@ What the app sends to Qloo: place ids, a search text you typed, and a point roun
   - The hashtags are the place, the words people mention most about it (Qloo review keywords, by count), its photo tag and the weather right now (#CloudyBerlin).
   - "Post to Instagram" opens the phone's share menu with the photo (a web page can't open another app directly) and copies the caption.
   - The photo never leaves your phone.
-- **Trip list:** search a place → if the detour is 15 min or less it is added to today's walk, otherwise it's saved. Within 300 m of a saved place a pop-up asks: *Add it to this walk now?* — you choose.
+- **Trip list:** search a place → if the detour is 15 min or less it is added to today's walk, otherwise it's saved. When you later walk within 300 m of a saved place, the guide adds it to the walk right away and tells you (*"…is just 290 m from here. I'm adding it to the walk!"*).
 - **Trip wish:** type what you feel like instead of a name. Qloo's `find_tags` turns the words into Qloo tags ("cozy coffee" → Cozy Cafe, Cozy Coffeehouse) and the app shows up to 3 places near you that carry them, each with ＋ Add / ⭐ Later. Tags that share no word with what you typed are dropped, so gibberish gets no answer. It is not a chat: each search stands alone, there are no follow-up questions, and a reply takes 10–20 s on the live server.
-
-![Saved place pop-up](docs/trip-popup.png)
 
 - **Voice:** ElevenLabs. The server keeps the key, caches repeated lines and caps the public demo at a daily character budget. If ElevenLabs is unavailable, the browser's own voice reads the line.
 
@@ -138,7 +136,7 @@ Tap **Demo** to walk a simulated route from Alexanderplatz, or **GPS** to walk f
 - **Instagram:** reels inside the card would need an Instagram Business account, a Meta app and approval for the *Instagram Public Content Access* feature (Hashtag Search: max 30 hashtags per 7 days). That is not part of this submission. The card's last slide links to the place's public hashtag page instead (no API, no account, nothing sent from our side).
 - **Tested** with a headless browser and GPS emulation:
   - re-planning from a GPS start, out-of-order stops, ignored jumpy fixes;
-  - the Trip pop-up, the For you walk, the OpenStreetMap fallback;
+  - saved Trip places added when you walk near them, the For you walk, the OpenStreetMap fallback;
   - ElevenLabs playback and the device-voice fallback.
 
   **Not yet tested on a real phone:** the screen staying on, iOS audio, the share sheet into Instagram.

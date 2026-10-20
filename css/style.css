@@ -248,8 +248,6 @@ h2 { font-size: 22px; line-height: 1.15; font-weight: 800; letter-spacing: -0.02
 }
 .consent p { margin: 8px 0 12px; font-size: 13px; color: #d6dcea; }
 .consent .row { display: flex; justify-content: flex-end; gap: 8px; margin: 0; }
-#tripPop { z-index: 810; }
-body:has(#tripPop:not([hidden])) .toast { top: calc(230px + env(safe-area-inset-top)); }
 .trip-pane { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: auto; }
 .trip-pane .side-list { flex: none; overflow: visible; }   /* the pane scrolls as one: results + saved list */
 .trip-pane #tripList { flex: 1; }

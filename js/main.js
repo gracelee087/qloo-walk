@@ -482,7 +482,7 @@ async function handleWant(place, { force = false } = {}) {
   if (!force && next.seconds - base.seconds > TOO_FAR_S) {
     saveToTrip(p);
     toast(`⭐ ${nameOf(p)} is ~${extraMin} min off the walk — saved to Trip for later`, 5000);
-    return say(`${nameOf(p)} is too far from here (about ${extraMin} min out of the way), so I'll save it to your trip list ⭐! When we get near it, I'll ask and add it then.`);
+    return say(`${nameOf(p)} is too far from here (about ${extraMin} min out of the way), so I'll save it to your trip list ⭐! When we get near it, I'll add it then.`);
   }
   // re-plan from here: walked stops stay, the rest follows the new route
   const stops = [...done, ...withP];
@@ -530,19 +530,18 @@ function renderTrip() {
     box.append(row);
   }
 }
-// walking past a saved place → a popup, once per place; you choose
-function checkNearTrip() {
-  if (!state.running || !state.pos || !el("tripPop").hidden) return;
+// walking past a saved place → added to the walk right away, once per place (✕ in the list removes it)
+let tripAdding = false;
+async function checkNearTrip() {
+  if (!state.running || !state.pos || tripAdding) return;
   for (const t of state.trip) {
     if (t.alerted) continue;
     const d = metersBetween(state.pos, [t.lng, t.lat], t.lat);
     if (d > NEAR_M) continue;
     t.alerted = true; saveTrip();
-    el("tripPopText").textContent = `${t.name} is just ${fmtDist(d)} from here. Add it to this walk now?`;
-    el("tripPopAdd").onclick = () => { show("tripPop", false); handleWant(tripPlace(t), { force: true }); };
-    el("tripPopLater").onclick = () => { show("tripPop", false); toast(`⭐ ${t.name} stays in your Trip`); };
-    show("tripPop");
-    say(`Psst — ${t.name}, a place you saved earlier, is just ${fmtDist(d)} from here. Want to add it to the walk?`);
+    say(`Psst — ${t.name}, a place you saved earlier, is just ${fmtDist(d)} from here. I'm adding it to the walk!`);
+    tripAdding = true;
+    try { await handleWant(tripPlace(t), { force: true }); } finally { tripAdding = false; }
     return;
   }
 }
