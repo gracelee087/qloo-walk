@@ -8,7 +8,7 @@ const UA = "TasteWalk/0.1 (Qloo Agentic Hackathon demo; https://github.com/grace
 const OSRM = "https://routing.openstreetmap.de/routed-foot/route/v1/driving/";
 const GH = "https://graphhopper.com/api/1/route";
 const GH_MAX_POINTS = 5;          // free plan limit per request
-const MAX_POINTS = 12;
+const MAX_POINTS = 25;            // start + 8 stops + places added from Trip (FOSSGIS OSRM answered 25 points in a test)
 
 const cache = new Map();          // key -> result (this instance only)
 let nextSlot = 0;                 // earliest time the next OSRM call may start

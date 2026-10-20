@@ -59,7 +59,7 @@ const place = (e) => ({
   // what visitors mention most (Qloo counts them)
   keywords: [...(e.properties?.keywords || [])].sort((a, b) => (b.count ?? 0) - (a.count ?? 0)).slice(0, 6).map((k) => k.name),
   image: e.properties?.image?.url ?? null,
-  images: [...new Set([e.properties?.image?.url, ...(e.properties?.images || []).map((i) => i.url)].filter(Boolean))].slice(0, 5),
+  images: [...new Set([e.properties?.image?.url, ...(e.properties?.images || []).map((i) => i?.url)].filter(Boolean))].slice(0, 5),
 });
 
 const idList = (u) => (u.searchParams.get("ids") || "").split(",").map((s) => s.trim()).filter((s) => /^[0-9A-F-]{36}$/i.test(s)).slice(0, 5);
@@ -177,7 +177,9 @@ async function speech(req) {
   if (!process.env.ELEVENLABS_API_KEY) return Response.json({ error: "no voice configured" }, { status: 503 });
   const chunks = [];
   for await (const c of req) chunks.push(c);
-  const text = String(JSON.parse(Buffer.concat(chunks).toString() || "{}").text || "").trim().slice(0, 600);
+  let body;
+  try { body = JSON.parse(Buffer.concat(chunks).toString() || "{}"); } catch { return Response.json({ error: "JSON body required" }, { status: 400 }); }
+  const text = String(body?.text || "").trim().slice(0, 600);
   if (!text) return Response.json({ error: "text required" }, { status: 400 });
   if (!voiced.has(text)) {
     const day = new Date().toISOString().slice(0, 10);
@@ -240,7 +242,9 @@ async function api(req, u) {
 }
 
 async function file(u) {
-  const rel = u.pathname === "/" ? "index.html" : normalize(decodeURIComponent(u.pathname)).replace(/^[\\/]+/, "");
+  let path;
+  try { path = decodeURIComponent(u.pathname); } catch { return null; }     // a broken % escape is just not found
+  const rel = u.pathname === "/" ? "index.html" : normalize(path).replace(/^[\\/]+/, "");
   const top = rel.split(sep)[0].split("/")[0];
   if (rel !== "index.html" && !STATIC_DIRS.includes(top)) return null;
   if (rel.includes("..") || rel.includes("qloo-cache")) return null;

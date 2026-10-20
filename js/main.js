@@ -135,7 +135,8 @@ async function renderCourseBar(pool) {
   }
 }
 async function planForYou(c, b) {
-  if (!likedIds().length) return toast("Tap ○ Go on a few places you like — then Qloo picks a walk for your taste", 4500);
+  if (!likedIds().length) return toast(state.poolSource === "osm" ? "For you needs Qloo, and it isn't answering right now — try again in a moment"
+    : "Tap ○ Go on a few places you like — then Qloo picks a walk for your taste", 4500);
   b.disabled = true; b.querySelector("span").textContent = "asking Qloo…";
   try {
     const from = state.mode === "gps" && state.fix ? { lng: state.fix[0], lat: state.fix[1] } : CITY.start;
@@ -573,7 +574,7 @@ async function findForTrip(q) {
     const fresh = places.filter((x) => !shown.has(x.id) && shown.add(x.id));
     el("tripWait")?.before(...fresh.map((x) => row(x, false)));
     return fresh.length;
-  }).catch(() => 0);
+  }).catch(() => -1);                            // -1 = Qloo didn't answer
   const at = `lat=${from[1].toFixed(5)}&lon=${from[0].toFixed(5)}`;
   const byWish = qget(`/api/qloo/wish?q=${encodeURIComponent(q)}&${at}`).then(async ({ matched, places }) => {
     await byName;                                  // keep the name matches on top
@@ -584,11 +585,13 @@ async function findForTrip(q) {
     box.insertBefore(note(`Qloo matched “${matched.join("”, “")}” — ${fresh.length === 1 ? "a place" : `${fresh.length} places`} near you:`), where);
     for (const x of fresh) box.insertBefore(row(x, true), where);
     return fresh.length;
-  }).catch(() => 0);
+  }).catch(() => -1);                            // -1 = Qloo didn't answer
   const [n, w] = await Promise.all([byName, byWish]);
   if (ask !== tripAsk) return;
   el("tripWait")?.remove();
-  if (!n && !w) box.innerHTML = `<p class="hint empty">Qloo found nothing for “${q.replace(/[<&]/g, "")}” around here — try a place name or simpler words (“German food”, “techno”).</p>`;
+  if (n <= 0 && w <= 0) box.innerHTML = n < 0 || w < 0
+    ? `<p class="hint empty">Qloo didn't answer in time — try again in a moment.</p>`
+    : `<p class="hint empty">Qloo found nothing for “${q.replace(/[<&]/g, "")}” around here — try a place name or simpler words (“German food”, “techno”).</p>`;
   else box.append(note("One search at a time — Qloo matches your words to its tags; it doesn't hold a conversation."));
 }
 
@@ -1107,8 +1110,11 @@ async function fetchWeather() {
 
 // ---------- wiring + boot ----------
 function wire() {
-  el("yesBtn").addEventListener("click", () => judge(shown(), true));
-  el("noBtn").addEventListener("click", () => judge(shown(), false));
+  // a quick double tap would also judge (and skip) the next stop, which the card shows right after
+  let judgedAt = 0;
+  const judgeCard = (liked) => { if (Date.now() - judgedAt < 700) return; judgedAt = Date.now(); judge(shown(), liked); };
+  el("yesBtn").addEventListener("click", () => judgeCard(true));
+  el("noBtn").addEventListener("click", () => judgeCard(false));
   el("camBtn").addEventListener("click", snapPhoto);
   el("snapBtn").addEventListener("click", snapPhoto);
   // 🤫 AI silence: nothing between stops — the guide only talks when you arrive (and if you go off the route)
