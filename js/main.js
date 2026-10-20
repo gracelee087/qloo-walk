@@ -183,7 +183,7 @@ function renderList() {
     const row = document.createElement("div");
     row.className = `spot ${rowState(p, k)}`.trim(); row.dataset.id = p.id;
     row.innerHTML = `${p.image ? `<img src="${p.image}" alt="" loading="lazy" />` : `<i>${TYPE_ICON[p.type] || "📍"}</i>`}
-      <div class="spot-text"><b></b><small><span class="dist"></span> · ${TYPE_LABEL[p.type] || "Place"}</small></div>
+      <div class="spot-text"><b></b><small><span class="dist"></span> · ${TYPE_LABEL[p.type] || "Place"}${isPhotoZone(p) ? " · 📸 Photo zone" : ""}</small></div>
       <button class="mini no" title="Skip — not for me">✕</button><button class="mini yes" title="Go — I like this">○</button>`;
     row.querySelector("b").textContent = `${k + 1}. ${nameOf(p)}`;
     row.addEventListener("click", () => peek(p.id));
@@ -347,7 +347,7 @@ function updateDistance() {
   const from = state.pos || [CITY.start.lng, CITY.start.lat];
   const p = shown();
   if (p && !el("card").hidden) {
-    const label = TYPE_LABEL[p.type] || "Place";
+    const label = (TYPE_LABEL[p.type] || "Place") + (isPhotoZone(p) ? " · 📸 Photo zone" : "");
     el("stopMeta").textContent = !state.peek && state.atStop ? `${label} · you're here`
       : `${label} · ${fmtDist(metersBetween(from, [p.lng, p.lat], p.lat))}`;
   }
@@ -365,8 +365,14 @@ function arrive() {
   showStop();
   const about = p.about ? ` ${sentences(p.about, 2)}` : (p.menu ? ` They serve ${p.menu}.` : "");
   const side = sideOf(p.lng, p.lat);
-  say(`${side ? `Look to your ${side}. ` : ""}${nameOf(p)}.${about} Do you like it? Tap Go if it's for you, or Skip.`);
+  // a stop Qloo tags for views/photography is a photo zone: say so, and offer the camera
+  const zone = p.q && photoTag(p.q);
+  if (zone) { state.photoSpot = { p, at: Date.now() }; toast("📸 Photo zone!", 4000); }
+  say(`${side ? `Look to your ${side}. ` : ""}${nameOf(p)}.${about}` +
+    (zone ? ` 📸 This is a photo zone — Qloo tags it “${zone}”. ${POST_PITCH}` : " Do you like it? Tap Go if it's for you, or Skip."),
+    zone ? QLOO_SRC : undefined, zone ? { label: "📷 Take a photo", run: snapPhoto } : undefined);
 }
+const isPhotoZone = (p) => !!(p.q && photoTag(p.q));
 
 // ✕ Skip / ○ Go — record taste for a place; for the stop you're walking to, move on
 function judge(p, liked) {
@@ -643,16 +649,19 @@ function weatherTip(near) {
 }
 // 📸 a photo spot = a nearby place Qloo rates as popular and tags for views / photography
 // (Qloo's own signals — we never claim it's "popular on Instagram")
-const PHOTO_TAGS = ["photography", "scenic", "viewing platform", "panoramic", "skyline", "sunset view", "street art", "landmark view", "river view"];
+// strong tags say "this is a view"; a plain "Photography"/"Scenic" also sits on burger bars, so that only counts for non-food places
+const PHOTO_STRONG = ["viewing platform", "panoramic", "skyline", "sunset view", "street art", "landmark view", "river view", "urban photography", "street photography", "travel photography"];
+const PHOTO_WEAK = ["photography", "scenic"];
 const PHOTO_M = 120, PHOTO_POP = 0.9, PHOTO_GAP_MS = 120000;
-function photoSpot(near) {
-  for (const k of PHOTO_TAGS) for (const { q, d } of near) {
-    if (d > PHOTO_M || (q.popularity ?? 0) < PHOTO_POP) continue;
-    const tag = q.tags.find((t) => t.toLowerCase().includes(k));
-    if (tag) return { q, d, tag };
-  }
-  return null;
+function photoTag(q) {
+  const find = (keys) => { for (const k of keys) { const t = q.tags.find((x) => x.toLowerCase().includes(k)); if (t) return t; } return null; };
+  return find(PHOTO_STRONG) || (qPlace(q).type === "food" ? null : find(PHOTO_WEAK));
 }
+function photoSpot(near) {
+  const c = near.filter(({ q, d }) => d <= PHOTO_M && (q.popularity ?? 0) >= PHOTO_POP).map((x) => ({ ...x, tag: photoTag(x.q) })).filter((x) => x.tag);
+  return c.find((x) => PHOTO_STRONG.some((k) => x.tag.toLowerCase().includes(k))) || c[0] || null;
+}
+const POST_PITCH = "Snap a photo and I'll write the title, caption and hashtags for your Instagram post.";
 const told = new Set(), toldAt = [];   // Qloo places already talked about — and where, so Wikipedia doesn't repeat them
 const tell = (q) => { told.add(q.id); toldAt.push([q.lon, q.lat]); };
 let lastStoryAt = 0, lastTipAt = 0, lastPhotoAt = 0, aroundBusy = false;
@@ -674,7 +683,7 @@ async function checkAround() {
       const spot = qPlace(ps.q), side = sideOf(ps.q.lon, ps.q.lat);
       state.photoSpot = { p: spot, at: now };          // a photo taken soon after gets this place's caption
       toast("📸 Popular photo spot nearby!", 5000);
-      return say(`Photo spot! ${ps.q.name}, ${fmtDist(ps.d)} away${side ? ` on your ${side}` : ""}. It's popular on Qloo and tagged “${ps.tag}”.`,
+      return say(`📸 Photo spot! ${ps.q.name}, ${fmtDist(ps.d)} away${side ? ` on your ${side}` : ""}. It's popular on Qloo and tagged “${ps.tag}”. ${POST_PITCH}`,
         QLOO_SRC, { label: "📷 Take a photo", run: snapPhoto });
     }
     const tip = now - lastTipAt > TIP_GAP_MS ? weatherTip(near.filter((x) => x.d < TIP_M)) : null;
@@ -951,9 +960,11 @@ function photoTarget() {
 }
 const tagify = (s) => s.replace(/&/g, "and").replace(/[^\p{L}\p{N}]+/gu, "");
 // Qloo tags that say nothing about a place (payments, access, amenities…) stay out of the hashtags
-const BORING = /wheelchair|accessib|credit|debit|card|payment|nfc|cash|parking|restroom|toilet|elevator|minibar|towel|laundry|hair dryer|wi-?fi|onsite|reservation|ticket|morning|afternoon|evening|^night|foot traffic|destination|tourist attraction|city center|^place$|\d/i;
+const BORING = /wheelchair|accessib|credit|debit|card|payment|nfc|cash|parking|restroom|toilet|elevator|minibar|towel|laundry|hair dryer|wi-?fi|onsite|reservation|ticket|morning|afternoon|evening|^night|foot traffic|destination|tourist attraction|city center|^place$|walkable|good for|kids|large group|casual|\d/i;
 function hashtags(place, q) {
-  const words = [...(q?.tags || []), ...(q?.keywords || [])]
+  // the photo tags first, then what kind of place it is, then the rest
+  const photo = (q?.tags || []).filter((t) => [...PHOTO_STRONG, ...PHOTO_WEAK].some((k) => t.toLowerCase().includes(k)));
+  const words = [...new Set([...photo, ...(q?.kinds || []), ...(q?.keywords || []), ...(q?.tags || [])])]
     .filter((w) => !BORING.test(w) && !place.toLowerCase().includes(w.toLowerCase())).slice(0, 4);
   const seen = new Set();
   return [place !== CITY.area && place, ...words, ...CITY.hashtags, "TasteWalk"].filter(Boolean).map(tagify)
@@ -962,7 +973,8 @@ function hashtags(place, q) {
 // title / content / tags, filled from Qloo's data for the place (q) when Qloo knows it
 function fillPost(place, q) {
   el("postTitle").value = place === CITY.area ? `📍 ${CITY.area}` : `📍 ${place}, ${CITY.area}`;
-  el("postBody").value = q?.about ? sentences(q.about, 1) : "";
+  const zone = q && photoTag(q);
+  el("postBody").value = [q?.about ? sentences(q.about, 1) : "", zone ? `📸 ${zone} — found on a TasteWalk through ${CITY.area} 👟` : ""].filter(Boolean).join("\n");
   el("postTags").value = hashtags(place, q).map((t) => "#" + t).join(" ");
 }
 const caption = () => [[el("postTitle").value, el("postBody").value].map((s) => s.trim()).filter(Boolean).join("\n"), el("postTags").value.trim()]

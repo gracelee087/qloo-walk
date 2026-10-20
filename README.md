@@ -82,7 +82,10 @@ What the app sends to Qloo: place ids, a search text you typed, and a point roun
     - the **feel of the area** (Qloo's neighbourhood description).
   - The facts are read as they are; only the cheerful opener ("Fun fact!", "Foodie alert!") is ours.
 - **🤫 AI silence:** one tap and the guide only talks when you reach a stop (and if you wander off the route).
-- **Photo spots:** a Qloo place within 120 m that has a photo tag (Photography, Scenic, Viewing platform, …) and Qloo popularity of at least 0.9 triggers "Photo spot!".
+- **Photo zones and photo spots:**
+  - A stop whose Qloo tags say "view" (Panoramic views, Skyline view, Travel photography, Urban landmark view, …) is a **📸 Photo zone**. It is marked in the list, and when you arrive the guide asks you to take a photo.
+  - On the way, a Qloo place within 120 m with such a tag and popularity of at least 0.9 triggers "Photo spot!".
+  - A plain "Photography" or "Scenic" tag doesn't count for restaurants: Qloo puts it on burger bars too.
   The 📷 button opens a post sheet with Title, Content and Tags filled in from Qloo. "Post to Instagram" uses the phone's share sheet and copies the caption. The photo never leaves your phone.
 - **Trip list:** search a place → if the detour is 15 min or less it is added to today's walk, otherwise it's saved. Within 300 m of a saved place a pop-up asks: *Add it to this walk now?* — you choose.
 
