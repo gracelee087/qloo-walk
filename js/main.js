@@ -12,6 +12,7 @@ const WALK_SPEED = 12;          // m/s — the demo walk is sped up
 const ARRIVE_M = 35;            // "you're at the stop"
 const OTHER_STOP_M = 40;        // GPS: this close to a later stop → take it now (Myeongdong 3D's POI_TRIGGER)
 const GOOD_FIX_M = 50;          // GPS fixes less accurate than this don't trigger arrivals or route warnings
+const LEAVE_M = 60;             // GPS: walked this far from a stop without tapping Go/Skip → on to the next one
 const WALK_M_PER_MIN = 75;      // ~4.5 km/h, for time estimates when routing is down
 // assumed minutes spent at each kind of stop — only for the "est." times
 const DWELL = { food: 30, culture: 20, attraction: 10, shopping: 10 };
@@ -658,7 +659,8 @@ async function checkAround() {
   if (!state.running || state.atStop || state.paused || state.quiet || aroundBusy || !state.pos || isPlaying()) return;
   aroundBusy = true;
   try {
-    if (state.mode === "sim" && state.path.length) nearbyPlaces(pointAlong(state.path, state.cum, state.dist + 200).pos);   // fetch ahead
+    // fetch 200 m ahead (demo and GPS): Qloo takes seconds, so the stories are ready when you get there
+    if (state.path.length) { const ahead = pointAlong(state.path, state.cum, state.dist + 200).pos; nearbyPlaces(ahead); wikiNear(ahead); }
     const here = state.pos, places = await nearbyPlaces(here);
     if (!state.running || state.atStop || isPlaying()) return;
     const onWalk = (q) => state.stops.some((s) => s.qid === q.id || metersBetween([s.lng, s.lat], [q.lon, q.lat], q.lat) < 40);
@@ -790,14 +792,26 @@ function turnAt(i) {
   const p = state.path, d = angDiff(segBearing(p[i - 1], p[i]), segBearing(p[i], p[i + 1]));
   return Math.abs(d) < 38 ? null : { i, dir: d > 0 ? "right" : "left" };
 }
-// GPS: the nearest corner within 28 m of the real position
-function gpsUpcomingTurn(a) {
-  let bi = -1, bd = 28;
-  for (let i = 1; i < state.path.length - 1; i++) {
+// GPS: how far along the route you are — the nearest route point, searched around where you were
+// (a walk can pass the same corner twice; don't jump to the other pass). null = not near the route.
+function routeProgress(a) {
+  let best = -1, bd = Infinity;
+  for (let i = 0; i < state.path.length; i++) {
+    if (state.cum[i] < state.dist - 40 || state.cum[i] > state.dist + 400) continue;
     const d = metersBetween(a, state.path[i], a[1]);
-    if (d < bd) { bd = d; bi = i; }
+    if (d < bd) { bd = d; best = i; }
   }
-  return bi < 1 ? null : turnAt(bi);
+  return best < 0 || bd > 60 ? null : state.cum[best];
+}
+// the next corner within 35 m ahead along the route — never one you've already passed
+function turnAhead(m = 35) {
+  for (let i = 1; i < state.path.length - 1; i++) {
+    if (state.cum[i] <= state.dist) continue;
+    if (state.cum[i] - state.dist > m) return null;
+    const t = turnAt(i);
+    if (t) return t;
+  }
+  return null;
 }
 const distToRoute = (a) => state.path.reduce((m, p) => Math.min(m, metersBetween(a, p, a[1])), Infinity);
 // the street a corner leads into — only worth saying when it's a different street
@@ -806,12 +820,13 @@ function turnInto(i) {
   return after && after !== before ? after : null;
 }
 const TURN_LINES = [(d, s) => `Turn ${d} here, onto ${s}.`, (d, s) => `We're taking a ${d} onto ${s}.`, (d, s) => `${d[0].toUpperCase() + d.slice(1)} here — into ${s}.`];
-let turnIdx = -1, turnN = 0, lastTurnTalk = 0, offRoute = false, lastNavTalk = 0, lastPing = Date.now();
+const PING_LINES = ["You're doing great.", "Nice pace!", "Keep it up — you're on track.", "Lovely walk so far."];
+let pingN = 0, turnIdx = -1, turnN = 0, lastTurnTalk = 0, offRoute = false, lastNavTalk = 0, lastPing = Date.now();
 function navTick() {
   if (!state.running || state.paused || state.atStop || !state.pos || isPlaying() || !state.path.length) return;
   // demo walk: no turn talk — the yellow line shows the way
   if (state.mode !== "gps" || !state.posGood) return;
-  const turn = gpsUpcomingTurn(state.pos), into = turn && turn.i !== turnIdx && turnInto(turn.i);
+  const turn = turnAhead(), into = turn && turn.i !== turnIdx && turnInto(turn.i);
   if (turn) turnIdx = turn.i;
   if (into && !state.quiet && Date.now() - lastTurnTalk > 30000) {
     lastTurnTalk = Date.now();
@@ -827,7 +842,7 @@ function navTick() {
     say(`Nice — you're back on the route.${ahead}`);
   } else if (!offRoute && !state.quiet && next && now - lastPing > 90000 && now - lastNavTalk > 30000) {
     lastPing = lastNavTalk = now;
-    say(`You're doing great.${ahead}`);
+    say(`${PING_LINES[pingN++ % PING_LINES.length]}${ahead}`);
   }
 }
 
@@ -866,15 +881,24 @@ function startGPS() {
   state.gpsWatch = navigator.geolocation.watchPosition((pos) => {
     const { latitude: lat, longitude: lng, accuracy } = pos.coords;
     state.posGood = accuracy <= GOOD_FIX_M;   // a jumpy fix moves the dot but triggers nothing
-    // heading from the last good fix, once you've moved a few metres (for "on your left/right")
-    if (state.posGood && state.pos && metersBetween(state.pos, [lng, lat], lat) > 4) state.heading = bearingTo({ lng: state.pos[0], lat: state.pos[1] }, { lng, lat });
+    // heading for "on your left/right": the phone's own while walking, else from the last good fix
+    // once you've moved a few metres (standing still, GPS jitter would spin it around)
+    const { heading: h, speed } = pos.coords;
+    if (state.posGood && Number.isFinite(h) && speed > 0.5) state.heading = h;
+    else if (state.posGood && state.pos && metersBetween(state.pos, [lng, lat], lat) > 6) state.heading = bearingTo({ lng: state.pos[0], lat: state.pos[1] }, { lng, lat });
     state.pos = state.fix = [lng, lat];
+    if (state.running && state.posGood && state.path.length) { const d = routeProgress(state.pos); if (d != null) state.dist = d; }
     follow(lng, lat);
     if (metersBetween(state.pos, [CITY.start.lng, CITY.start.lat], lat) > CITY.maxFromCenterM) {
       toast(`You're outside ${CITY.area} — the guide starts when you get there.`);
       return;
     }
-    if (state.running && state.posGood) { checkOtherStops(); checkArrival(); }
+    if (state.running && state.posGood) {
+      // people walk on without tapping anything — that shouldn't leave the guide stuck at the stop
+      const s = state.atStop && current();
+      if (s && metersBetween(state.pos, [s.lng, s.lat], s.lat) > LEAVE_M) { advance(); toast(`On to ${current() ? nameOf(current()) : "the end"} 👟`); }
+      checkOtherStops(); checkArrival();
+    }
   }, (err) => {
     toast(err.code === 1 ? "📍 Location denied — allow it in the browser settings." : "📍 No location signal yet.", 5000);
   }, { enableHighAccuracy: true, maximumAge: 2000, timeout: 15000 });
