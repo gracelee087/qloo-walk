@@ -653,7 +653,8 @@ function photoSpot(near) {
   }
   return null;
 }
-const told = new Set();
+const told = new Set(), toldAt = [];   // Qloo places already talked about — and where, so Wikipedia doesn't repeat them
+const tell = (q) => { told.add(q.id); toldAt.push([q.lon, q.lat]); };
 let lastStoryAt = 0, lastTipAt = 0, lastPhotoAt = 0, aroundBusy = false;
 async function checkAround() {
   if (!state.running || state.atStop || state.paused || state.quiet || aroundBusy || !state.pos || isPlaying()) return;
@@ -669,7 +670,7 @@ async function checkAround() {
     const now = Date.now();
     const ps = now - lastPhotoAt > PHOTO_GAP_MS ? photoSpot(near) : null;
     if (ps) {
-      told.add(ps.q.id); lastPhotoAt = lastStoryAt = now;
+      tell(ps.q); lastPhotoAt = lastStoryAt = now;
       const spot = qPlace(ps.q), side = sideOf(ps.q.lon, ps.q.lat);
       state.photoSpot = { p: spot, at: now };          // a photo taken soon after gets this place's caption
       toast("📸 Popular photo spot nearby!", 5000);
@@ -678,13 +679,13 @@ async function checkAround() {
     }
     const tip = now - lastTipAt > TIP_GAP_MS ? weatherTip(near.filter((x) => x.d < TIP_M)) : null;
     if (tip) {
-      told.add(tip.q.id); lastTipAt = lastStoryAt = now;
+      tell(tip.q); lastTipAt = lastStoryAt = now;
       return say(tip.text, QLOO_SRC, { label: "⭐ Later", run: () => { saveToTrip(qPlace(tip.q)); toast(`⭐ Saved ${tip.q.name}`); } });
     }
     // passing places worth a word — not everyday shops (a discount store is no story)
     const pass = now - lastStoryAt > STORY_GAP_MS && near.find((x) => x.d < PASS_M && (x.q.story || x.q.about) && qPlace(x.q).type !== "shopping");
     if (pass) {
-      told.add(pass.q.id); lastStoryAt = now;
+      tell(pass.q); lastStoryAt = now;
       const side = sideOf(pass.q.lon, pass.q.lat);
       return say(`${side ? `On your ${side}, ` : "Right here, "}${pass.q.name}. ${sentences(pass.q.story || pass.q.about, 2)}`, QLOO_SRC);
     }
@@ -725,7 +726,7 @@ async function fillLine(kind, here, near) {
     // articles about one of our stops count as 200 m farther: the stop gets its own introduction,
     // so the things you'd never hear otherwise come first
     const atStopSite = (x) => state.stops.some((s) => metersBetween([s.lng, s.lat], [x.lon, x.lat], x.lat) < 60);
-    const w = (await wikiNear(here)).filter((x) => !toldWiki.has(x.title))
+    const w = (await wikiNear(here)).filter((x) => !toldWiki.has(x.title) && !toldAt.some((t) => metersBetween(t, [x.lon, x.lat], x.lat) < 60))
       .map((x) => ({ x, d: metersBetween(here, [x.lon, x.lat], x.lat) })).filter((c) => c.d < 300)
       .sort((a, b) => a.d + (atStopSite(a.x) ? 200 : 0) - b.d - (atStopSite(b.x) ? 200 : 0))[0];
     if (!w) return null;
@@ -735,7 +736,7 @@ async function fillLine(kind, here, near) {
   if (kind === "food") {
     const f = near.find(({ q, d }) => d < FOOD_M && q.about && (q.popularity ?? 0) >= 0.9 && qPlace(q).type === "food");
     if (!f) return null;
-    told.add(f.q.id);
+    tell(f.q);
     const place = qPlace(f.q);
     return { text: `${opener(kind)} ${f.q.name} is ${fmtDist(f.d)} away${on(f.q.lon, f.q.lat)}. ${sentences(f.q.about, 1)}`, source: QLOO_SRC,
       actions: [{ label: "＋ Add to the walk", run: () => handleWant(place) },
