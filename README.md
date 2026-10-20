@@ -142,6 +142,7 @@ Tap **Demo** to walk a simulated route from Alexanderplatz, or **GPS** to walk f
   **Not yet tested on a real phone:** the screen staying on, iOS audio, the share sheet into Instagram.
 - The guide speaks English only. Street stories only exist for streets with an English Wikipedia article.
 - Guidance stops when the phone locks — a web app can't run in the background.
+- **A native app would fix two web limits:** it could hand the photo and caption straight to Instagram (no share menu), and keep guiding with the screen off. That is the planned next step.
 
 ## Data handling
 
