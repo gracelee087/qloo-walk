@@ -661,7 +661,7 @@ function photoSpot(near) {
   const c = near.filter(({ q, d }) => d <= PHOTO_M && (q.popularity ?? 0) >= PHOTO_POP).map((x) => ({ ...x, tag: photoTag(x.q) })).filter((x) => x.tag);
   return c.find((x) => PHOTO_STRONG.some((k) => x.tag.toLowerCase().includes(k))) || c[0] || null;
 }
-const POST_PITCH = "Snap a photo and I'll write the title, caption and hashtags for your Instagram post.";
+const POST_PITCH = "Snap a photo and I'll write the title and hashtags for your Instagram post.";
 const told = new Set(), toldAt = [];   // Qloo places already talked about — and where, so Wikipedia doesn't repeat them
 const tell = (q) => { told.add(q.id); toldAt.push([q.lon, q.lat]); };
 let lastStoryAt = 0, lastTipAt = 0, lastPhotoAt = 0, aroundBusy = false;
@@ -961,24 +961,40 @@ function photoTarget() {
 const tagify = (s) => s.replace(/&/g, "and").replace(/[^\p{L}\p{N}]+/gu, "");
 // Qloo tags that say nothing about a place (payments, access, amenities…) stay out of the hashtags
 const BORING = /wheelchair|accessib|credit|debit|card|payment|nfc|cash|parking|restroom|toilet|elevator|minibar|towel|laundry|hair dryer|wi-?fi|onsite|reservation|ticket|morning|afternoon|evening|^night|foot traffic|destination|tourist attraction|city center|^place$|walkable|good for|kids|large group|casual|\d/i;
-function hashtags(place, q) {
-  // the photo tags first, then what kind of place it is, then the rest
-  const photo = (q?.tags || []).filter((t) => [...PHOTO_STRONG, ...PHOTO_WEAK].some((k) => t.toLowerCase().includes(k)));
-  const words = [...new Set([...photo, ...(q?.kinds || []), ...(q?.keywords || []), ...(q?.tags || [])])]
-    .filter((w) => !BORING.test(w) && !place.toLowerCase().includes(w.toLowerCase())).slice(0, 4);
-  const seen = new Set();
-  return [place !== CITY.area && place, ...words, ...CITY.hashtags, "TasteWalk"].filter(Boolean).map(tagify)
-    .filter((t) => t && !seen.has(t.toLowerCase()) && seen.add(t.toLowerCase()));
+// the weather right now as a tag: #SunnyBerlin, #RainyBerlin … (Open-Meteo, same as the chip at the top)
+function weatherTag() {
+  const w = state.wx;
+  if (!w) return null;
+  const c = w.code, word = c === 0 ? (w.day ? "Sunny" : "Starry") : c <= 3 ? "Cloudy" : c <= 48 ? "Foggy" : c <= 67 || (c >= 80 && c <= 82) ? "Rainy"
+    : c <= 77 || (c >= 85 && c <= 86) ? "Snowy" : "Stormy";
+  return `${word}${CITY.short}`;
 }
-// title / content / tags, filled from Qloo's data for the place (q) when Qloo knows it
+// tags: the place, then the words people use most about it (Qloo counts review keywords),
+// its photo tag, the weather, the city — `picked` start selected, `more` are extra suggestions
+function hashtags(place, q) {
+  const photo = (q?.tags || []).filter((t) => PHOTO_STRONG.some((k) => t.toLowerCase().includes(k))).slice(0, 1);
+  const kinds = [...(q?.kinds || []), ...(q?.tags || [])];     // after the keywords (or instead, if Qloo has none)
+  const words = [...new Set([...(q?.keywords || []), ...kinds])]
+    .filter((w) => !BORING.test(w) && !place.toLowerCase().includes(w.toLowerCase())).slice(0, 10);
+  const seen = new Set();
+  const clean = (a) => a.filter(Boolean).map(tagify).filter((t) => t && !seen.has(t.toLowerCase()) && seen.add(t.toLowerCase()));
+  const picked = clean([place !== CITY.area && place, ...words.slice(0, 4), ...photo, weatherTag(), ...CITY.hashtags, "TasteWalk"]);
+  return { picked, more: clean(words.slice(4)) };
+}
+// title + tag chips: tap a chip to add or remove it; the tags box always shows what's selected
 function fillPost(place, q) {
   el("postTitle").value = place === CITY.area ? `📍 ${CITY.area}` : `📍 ${place}, ${CITY.area}`;
-  const zone = q && photoTag(q);
-  el("postBody").value = [q?.about ? sentences(q.about, 1) : "", zone ? `📸 ${zone} — found on a TasteWalk through ${CITY.area} 👟` : ""].filter(Boolean).join("\n");
-  el("postTags").value = hashtags(place, q).map((t) => "#" + t).join(" ");
+  const { picked, more } = hashtags(place, q), all = [...picked, ...more], on = new Set(picked);
+  const sync = () => { el("postTags").value = all.filter((t) => on.has(t)).map((t) => "#" + t).join(" "); };
+  const box = el("tagChips"); box.innerHTML = "";
+  for (const t of all) {
+    const b = Object.assign(document.createElement("button"), { type: "button", className: `tag-chip${on.has(t) ? " on" : ""}`, textContent: `#${t}` });
+    b.addEventListener("click", () => { on.has(t) ? on.delete(t) : on.add(t); b.classList.toggle("on", on.has(t)); sync(); state.postEdited = true; });
+    box.append(b);
+  }
+  sync();
 }
-const caption = () => [[el("postTitle").value, el("postBody").value].map((s) => s.trim()).filter(Boolean).join("\n"), el("postTags").value.trim()]
-  .filter(Boolean).join("\n\n");
+const caption = () => [el("postTitle").value.trim(), el("postTags").value.trim()].filter(Boolean).join("\n\n");
 function compressImage(file, maxW = 1080) {
   return new Promise((res, rej) => {
     const url = URL.createObjectURL(file), im = new Image();
@@ -1012,8 +1028,13 @@ async function onPhoto(e) {
       const q = await qlooMatch(target);
       if (q && !state.postEdited) fillPost(place, q);
     } catch { /* template stays */ }
+  } else if (!target && state.pos) {
+    // not at a stop: the nearest Qloo place within 100 m gives the tags
+    const here = state.pos, near = (await nearbyPlaces(here)).map((q) => ({ q, d: metersBetween(here, [q.lon, q.lat], q.lat) }))
+      .filter((x) => x.d < 100).sort((a, b) => a.d - b.d)[0];
+    if (near && !state.postEdited) { state.photo.place = near.q.name; fillPost(near.q.name, near.q); }
   }
-  el("postHint").textContent = "Post to Instagram opens your share menu with the photo — the caption is copied, paste it in Instagram.";
+  el("postHint").textContent = "Tap Post to Instagram → choose Instagram in the menu → paste the caption (it's already copied).";
 }
 async function copyCaption() {
   try { await navigator.clipboard.writeText(caption()); return true; } catch { return false; }
@@ -1030,7 +1051,7 @@ async function sharePost() {
   if (navigator.canShare?.({ files: [file] })) {
     try {
       await navigator.share({ files: [file], text });
-      toast(copied ? "Caption copied — paste it in Instagram" : "Shared");
+      toast(copied ? "Caption copied — paste it in Instagram ✨" : "Shared");
     } catch (err) { if (err.name !== "AbortError") toast("Couldn't open the share menu"); }
     return;
   }
@@ -1119,7 +1140,7 @@ function wire() {
   show("consent", consent() === null);
   el("recenterBtn").addEventListener("click", () => { recenter(); if (state.pos) follow(state.pos[0], state.pos[1]); });
   document.querySelectorAll("#modeToggle button").forEach((b) => b.addEventListener("click", () => setMode(b.dataset.mode)));
-  for (const id of ["postTitle", "postBody", "postTags"]) el(id).addEventListener("input", () => { state.postEdited = true; });
+  for (const id of ["postTitle", "postTags"]) el(id).addEventListener("input", () => { state.postEdited = true; });
   el("shareBtn").addEventListener("click", sharePost);
   el("copyBtn").addEventListener("click", async () => toast((await copyCaption()) ? "Caption copied" : "Select the text to copy it"));
   el("saveBtn").addEventListener("click", savePhoto);

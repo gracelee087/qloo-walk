@@ -54,7 +54,8 @@ const place = (e) => ({
   about: e.properties?.short_description || e.properties?.description || null,
   story: e.properties?.unique_selling_points || e.properties?.neighborhood_description || null,
   area: e.properties?.neighborhood_description || null,
-  keywords: (e.properties?.keywords || []).slice(0, 5).map((k) => k.name),
+  // what visitors mention most (Qloo counts them)
+  keywords: [...(e.properties?.keywords || [])].sort((a, b) => (b.count ?? 0) - (a.count ?? 0)).slice(0, 6).map((k) => k.name),
   image: e.properties?.image?.url ?? null,
   images: [...new Set([e.properties?.image?.url, ...(e.properties?.images || []).map((i) => i.url)].filter(Boolean))].slice(0, 5),
 });
