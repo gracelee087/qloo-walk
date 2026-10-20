@@ -64,6 +64,15 @@ export async function playNarration(text) {
   await speakLocal(text);
 }
 
+// a pre-recorded clip (e.g. the welcome). Call it straight from a tap: play() starts
+// before any await, so iOS lets this element play the guide's later lines too
+export async function playFile(url, text) {
+  stop();
+  const my = seq;
+  if (player && await playUrl(url)) return;
+  if (my === seq) await speakLocal(text);
+}
+
 export function stop() {
   seq++;
   held = false;

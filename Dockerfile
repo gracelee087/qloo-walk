@@ -10,6 +10,7 @@ COPY index.html server.mjs package.json ./
 COPY css ./css
 COPY js ./js
 COPY data ./data
+COPY audio ./audio
 COPY server ./server
 COPY netlify/functions ./netlify/functions
 ENV PORT=8080

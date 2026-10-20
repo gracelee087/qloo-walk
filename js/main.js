@@ -1,7 +1,7 @@
 // TasteWalk — pick a walk, follow the route, tap ✕ / ○ at each stop so the
 // guide learns your taste, snap a photo and post it straight to Instagram.
 // Walking area: city.js. Map: map2d.js. Routing: route.js. Voice: audio.js.
-import { playNarration, stop as audioStop, pause as audioPause, resume as audioResume, isPlaying, prime } from "./audio.js";
+import { playNarration, playFile, stop as audioStop, pause as audioPause, resume as audioResume, isPlaying, prime } from "./audio.js";
 import { initMap, setRoute, setStops, markStop, follow, recenter, fitStops, setTheme, setInsets, streetAt } from "./map2d.js";
 import { metersBetween, bearingTo, orderStops, fetchWalkPath, cumulative, pointAlong } from "./route.js";
 import { CITY } from "./city.js";
@@ -256,6 +256,11 @@ function renderDock() {
   el("pauseBtn").textContent = state.paused ? "Resume" : "Pause";
 }
 // narration + remember it for ‹ Prev + log it in the Guide tab
+// recorded once with ElevenLabs into audio/welcome.mp3 — change both together
+const WELCOME = "Hi, and welcome to TasteWalk Berlin! I'm your local companion for this walk, and I'm here to show you a Berlin that fits you. " +
+  "Pick a walk to begin: Must See for the big landmarks, Classic for a bit of everything, Slow Down for food and coffee, " +
+  "or For you, a walk Qloo builds from the places you love. On the way, just tap Go when a place feels right, " +
+  "and I'll keep finding new experiences for you. Ready? Tap Start Walk. Let's go!";
 function say(text, source, actions) {
   state.lastLine = text; el("prevBtn").disabled = false;
   addMsg("buddy", text, actions, source);
@@ -1035,8 +1040,15 @@ async function boot() {
     renderCourseBar(pool);
     renderEnv(); fetchWeather();
     setInterval(renderEnv, 30000); setInterval(fetchWeather, 600000);
-    el("overlay").classList.add("hidden");
     requestAnimationFrame(frame);
+    // browsers only let a page make sound after a tap — so the welcome waits for one
+    el("overlayMsg").hidden = true; show("tapNote"); show("tapStart");
+    el("tapStart").addEventListener("click", () => {
+      el("overlay").classList.add("hidden");
+      prime();
+      addMsg("buddy", WELCOME);
+      playFile("./audio/welcome.mp3", WELCOME);
+    }, { once: true });
   } catch (err) {
     console.error(err);
     el("overlayMsg").textContent = `Couldn't load the map: ${err.message}`;

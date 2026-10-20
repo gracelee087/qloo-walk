@@ -18,9 +18,9 @@ import { qloo } from "./server/qloo.js";
 
 const ROOT = fileURLToPath(new URL(".", import.meta.url));
 const PORT = Number(process.env.PORT) || 8888;
-const STATIC_DIRS = ["css", "js", "data"];         // same set as scripts/build-site.mjs
+const STATIC_DIRS = ["css", "js", "data", "audio"];
 const TYPES = { ".html": "text/html; charset=utf-8", ".css": "text/css", ".js": "text/javascript",
-  ".json": "application/json", ".svg": "image/svg+xml", ".png": "image/png", ".jpg": "image/jpeg", ".webp": "image/webp" };
+  ".json": "application/json", ".svg": "image/svg+xml", ".png": "image/png", ".jpg": "image/jpeg", ".webp": "image/webp", ".mp3": "audio/mpeg" };
 const FUNCTIONS = ["route"];
 const SOURCE = "Qloo Insights API (hackathon), via the qloo api CLI";
 const NEARBY_M = 300;
