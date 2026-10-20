@@ -482,7 +482,7 @@ async function handleWant(place, { force = false } = {}) {
   if (!force && next.seconds - base.seconds > TOO_FAR_S) {
     saveToTrip(p);
     toast(`⭐ ${nameOf(p)} is ~${extraMin} min off the walk — saved to Trip for later`, 5000);
-    return say(`${nameOf(p)} is about ${extraMin} min out of the way, so I saved it to your trip list ⭐ — I'll give you a shout when you're near it.`);
+    return say(`${nameOf(p)} is too far from here (about ${extraMin} min out of the way), so I'll save it to your trip list ⭐! When we get near it, I'll ask and add it then.`);
   }
   // re-plan from here: walked stops stay, the rest follows the new route
   const stops = [...done, ...withP];
