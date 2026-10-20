@@ -6,6 +6,8 @@
 //   GET /api/qloo/nearby?lat=<lat>&lon=<lon>   -> Qloo places within NEARBY_M of a point (stories + tips while walking)
 //   GET /api/qloo/course?lat=<lat>&lon=<lon>[&ids=<id,id>] -> Qloo places within COURSE_M to build walks from
 //                                               (with ids: ranked by taste affinity to those places — the "For you" walk)
+//   GET /api/qloo/wish?q=<text>&lat=<lat>&lon=<lon> -> a typed wish ("cozy coffee") -> Qloo tags (find_tags) -> up to 3 places
+//                                               near the point that carry them (no LLM; Qloo matches the words)
 //   GET /api/story?street=<name>               -> the street's English Wikipedia summary, first sentences, read as is (no LLM)
 //   GET /api/wiki/near?lat=<lat>&lon=<lon>     -> English Wikipedia articles within WIKI_M (local history), first sentences, read as is
 //   POST /api/tts {text}                     -> the guide's line as ElevenLabs speech (audio/mpeg); the key stays here
@@ -15,7 +17,7 @@ import { readFile } from "node:fs/promises";
 import { extname, join, normalize, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { CITY } from "./js/city.js";
-import { qloo } from "./server/qloo.js";
+import { qloo, qlooExec } from "./server/qloo.js";
 
 const ROOT = fileURLToPath(new URL(".", import.meta.url));
 const PORT = Number(process.env.PORT) || 8888;
@@ -65,6 +67,16 @@ const idList = (u) => (u.searchParams.get("ids") || "").split(",").map((s) => s.
 const gridPoint = (u) => ({ lat: Math.round(Number(u.searchParams.get("lat")) * 1000) / 1000,
   lon: Math.round(Number(u.searchParams.get("lon")) * 1000) / 1000 });
 
+// the walk pool; the wish route reuses the same args so it hits the cache
+const courseArgs = (lat, lon, ids = []) => ["insights", "-t", "place", "-n", ids.length ? "30" : "50",
+  ...(ids.length ? ["--signal-entities", ids.join(",")] : []),
+  "--params", JSON.stringify({ "filter.location": `POINT(${lon} ${lat})`, "filter.location.radius": COURSE_M })];
+const keep = (seen) => (p) => !p.kinds.some((k) => STAY.test(k)) && !seen.has(p.name.toLowerCase()) && seen.add(p.name.toLowerCase());
+// words of a tag name that say something ("Good for kids" -> kids)
+const VAGUE = new Set(["good", "for", "the", "and", "with", "place", "places", "spot", "spots", "restaurant", "bar", "shop", "store", "qloo"]);
+const words = (t) => t.toLowerCase().split(/[^a-zäöüß]+/).filter((w) => w.length > 2 && !VAGUE.has(w));
+const sameWord = (a, b) => a.startsWith(b) || b.startsWith(a);   // kid / kids, coffee / coffeehouse
+
 async function qlooRoute(path, u) {
   if (path === "search") {
     const q = (u.searchParams.get("q") || "").trim().slice(0, 80);
@@ -91,14 +103,34 @@ async function qlooRoute(path, u) {
   if (path === "course") {
     const { lat, lon } = gridPoint(u), ids = idList(u);
     if (!inArea({ location: { lat, lon } })) return Response.json({ error: "outside the walking area" }, { status: 400 });
-    const j = await qloo(["insights", "-t", "place", "-n", ids.length ? "30" : "50",
-      ...(ids.length ? ["--signal-entities", ids.join(",")] : []),
-      "--params", JSON.stringify({ "filter.location": `POINT(${lon} ${lat})`, "filter.location.radius": COURSE_M })]);
-    const seen = new Set();      // Qloo can list one place twice under the same name
+    const j = await qloo(courseArgs(lat, lon, ids));
     const places = j.filter((e) => e.location && !ids.includes(e.entity_id)).map(place)
-      .filter((p) => !p.kinds.some((k) => STAY.test(k)) && !seen.has(p.name.toLowerCase()) && seen.add(p.name.toLowerCase()));
+      .filter(keep(new Set()));  // Qloo can list one place twice under the same name
     return Response.json({ places, source: SOURCE,
       ...(ids.length && { note: "Affinity is aggregate taste data from Qloo, not a prediction about one person." }) });
+  }
+  if (path === "wish") {
+    const q = (u.searchParams.get("q") || "").trim().slice(0, 120), { lat, lon } = gridPoint(u);
+    if (!q) return Response.json({ error: "q required" }, { status: 400 });
+    if (!inArea({ location: { lat, lon } })) return Response.json({ error: "outside the walking area" }, { status: 400 });
+    const found = await qlooExec("find_tags", { query: q, semantic: true, limit: 8 });
+    // semantic search always answers, even for gibberish — keep tags that share a word with what was typed
+    const typed = words(q);
+    const tags = (found.results || []).filter((t) => t.id && t.name && words(t.name).some((w) => typed.some((v) => sameWord(w, v))));
+    if (!tags.length) return Response.json({ matched: [], places: [], source: SOURCE });
+    // (a) places near you that carry one of the tags; (b) the walk pool, scored by the tags' words
+    const [tagged, pool] = await Promise.all([
+      qloo(["insights", "-t", "place", "-n", "10", "--params", JSON.stringify({ "filter.location": `POINT(${lon} ${lat})`,
+        "filter.location.radius": COURSE_M, "filter.tags": tags.map((t) => t.id).join(","), "operator.filter.tags": "union" })]).catch(() => []),
+      qloo(courseArgs(lat, lon)).catch(() => []),
+    ]);
+    const want = [...new Set([...typed, ...tags.flatMap((t) => words(t.name))])];
+    // how many of the place's words hit the wish (a café tagged Coffee five times beats a burger bar tagged Cafe once)
+    const score = (p) => [...p.tags, ...p.keywords, p.about || ""].flatMap(words).filter((v) => want.some((w) => sameWord(v, w))).length;
+    const scored = pool.filter((e) => e.location).map(place).map((p) => [score(p), p]).filter(([n]) => n > 0)
+      .sort((a, b) => b[0] - a[0]).map(([, p]) => p);
+    const places = [...tagged.filter((e) => e.location).map(place), ...scored].filter(keep(new Set())).slice(0, 3);
+    return Response.json({ matched: [...new Set(tags.map((t) => t.name.trim()))].slice(0, 3), places, source: SOURCE });
   }
   return Response.json({ error: "not found" }, { status: 404 });
 }

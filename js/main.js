@@ -547,27 +547,50 @@ function checkNearTrip() {
   }
 }
 
-// Trip tab: find a place you want to go (Qloo search), then it goes in the walk or waits in Trip
+// Trip tab: type a place name (Qloo search) or a wish ("cozy coffee": Qloo find_tags -> places near you).
+// Both run at once; names show first, wish matches follow. Not a conversation — each search stands alone.
+let tripAsk = 0;
 async function findForTrip(q) {
-  const box = el("tripResults");
+  const box = el("tripResults"), ask = ++tripAsk;
   q = q.trim();
   if (!q) { box.innerHTML = ""; return; }
-  box.innerHTML = `<p class="hint empty">Looking on Qloo…</p>`;
-  let places;
-  try { places = (await qget(`/api/qloo/search?q=${encodeURIComponent(q)}`)).places; }
-  catch { box.innerHTML = `<p class="hint empty">Couldn't reach Qloo — try again in a moment.</p>`; return; }
-  box.innerHTML = places.length ? "" : `<p class="hint empty">No place called “${q.replace(/[<&]/g, "")}” in ${CITY.area} on Qloo.</p>`;
+  box.innerHTML = `<p class="hint empty" id="tripWait">Asking Qloo… (about 10–20 s)</p>`;
   const from = state.pos || [CITY.start.lng, CITY.start.lat];
-  for (const x of places) {
-    const p = qPlace(x), row = document.createElement("div");
-    row.className = "spot";
-    row.innerHTML = `${x.image ? `<img src="${x.image}" alt="" loading="lazy" />` : `<i>${TYPE_ICON[p.type] || "📍"}</i>`}
+  const row = (x, later) => {
+    const p = qPlace(x), r = document.createElement("div");
+    r.className = "spot";
+    r.innerHTML = `${x.image ? `<img src="${x.image}" alt="" loading="lazy" />` : `<i>${TYPE_ICON[p.type] || "📍"}</i>`}
       <div class="spot-text"><b></b><small>${fmtDist(metersBetween(from, [x.lon, x.lat], x.lat))} away</small></div>
-      <button class="mini yes" title="I want to go here">＋</button>`;
-    row.querySelector("b").textContent = x.name;
-    row.querySelector(".yes").addEventListener("click", () => { box.innerHTML = ""; el("tripQ").value = ""; handleWant(p); });
-    box.append(row);
-  }
+      ${later ? `<button class="mini" title="Save for later">⭐</button>` : ""}<button class="mini yes" title="I want to go here">＋</button>`;
+    r.querySelector("b").textContent = x.name;
+    r.querySelector(".yes").addEventListener("click", () => { box.innerHTML = ""; el("tripQ").value = ""; handleWant(p); });
+    r.querySelector(".mini:not(.yes)")?.addEventListener("click", () => { saveToTrip(p); toast(`⭐ Saved ${x.name}`); });
+    return r;
+  };
+  const note = (text) => { const n = document.createElement("p"); n.className = "hint"; n.textContent = text; return n; };
+  const shown = new Set();
+  const byName = qget(`/api/qloo/search?q=${encodeURIComponent(q)}`).then(({ places }) => {
+    if (ask !== tripAsk) return 0;
+    const fresh = places.filter((x) => !shown.has(x.id) && shown.add(x.id));
+    el("tripWait")?.before(...fresh.map((x) => row(x, false)));
+    return fresh.length;
+  }).catch(() => 0);
+  const at = `lat=${from[1].toFixed(5)}&lon=${from[0].toFixed(5)}`;
+  const byWish = qget(`/api/qloo/wish?q=${encodeURIComponent(q)}&${at}`).then(async ({ matched, places }) => {
+    await byName;                                  // keep the name matches on top
+    if (ask !== tripAsk) return 0;
+    const fresh = places.filter((x) => !shown.has(x.id) && shown.add(x.id));
+    if (!fresh.length) return 0;
+    const where = el("tripWait") || null;
+    box.insertBefore(note(`Qloo matched “${matched.join("”, “")}” — ${fresh.length === 1 ? "a place" : `${fresh.length} places`} near you:`), where);
+    for (const x of fresh) box.insertBefore(row(x, true), where);
+    return fresh.length;
+  }).catch(() => 0);
+  const [n, w] = await Promise.all([byName, byWish]);
+  if (ask !== tripAsk) return;
+  el("tripWait")?.remove();
+  if (!n && !w) box.innerHTML = `<p class="hint empty">Qloo found nothing for “${q.replace(/[<&]/g, "")}” around here — try a place name or simpler words (“German food”, “techno”).</p>`;
+  else box.append(note("One search at a time — Qloo matches your words to its tags; it doesn't hold a conversation."));
 }
 
 // ---------- Qloo ----------

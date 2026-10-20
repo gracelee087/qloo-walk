@@ -29,6 +29,7 @@ All Qloo calls go through the hackathon kit's supported surface, the **`qloo api
 | "People who liked X also like Y" (after each Go) | `--signal-entities <ids>`, `--filter-location Berlin` | the taste graph, not just "nearby" |
 | Passing places, weather tips, photo spots | places within 300 m of where you are | the place's own description, tags (e.g. "Late night", "Photography") and popularity |
 | Trip search ("a place I want to go") | `qloo api search -t place` | find a place by name, then check the detour |
+| Trip wish ("cozy coffee", "cheap German food") | `qloo exec find_tags` (semantic) → Insights with `filter.tags=<those tags>` within 1.5 km, plus the walk's places scored by those tag words | Qloo turns your words into its own tags — no language model |
 
 What the app sends to Qloo: place ids, a search text you typed, and a point rounded to about 100 m. No names, no device id, no location history.
 
@@ -91,6 +92,7 @@ What the app sends to Qloo: place ids, a search text you typed, and a point roun
   - "Post to Instagram" opens the phone's share menu with the photo (a web page can't open another app directly) and copies the caption.
   - The photo never leaves your phone.
 - **Trip list:** search a place → if the detour is 15 min or less it is added to today's walk, otherwise it's saved. Within 300 m of a saved place a pop-up asks: *Add it to this walk now?* — you choose.
+- **Trip wish:** type what you feel like instead of a name. Qloo's `find_tags` turns the words into Qloo tags ("cozy coffee" → Cozy Cafe, Cozy Coffeehouse) and the app shows up to 3 places near you that carry them, each with ＋ Add / ⭐ Later. Tags that share no word with what you typed are dropped, so gibberish gets no answer. It is not a chat: each search stands alone, there are no follow-up questions, and a reply takes 10–20 s on the live server.
 
 ![Saved place pop-up](docs/trip-popup.png)
 
@@ -140,6 +142,7 @@ Tap **Demo** to walk a simulated route from Alexanderplatz, or **GPS** to walk f
   - ElevenLabs playback and the device-voice fallback.
 
   **Not yet tested on a real phone:** the screen staying on, iOS audio, the share sheet into Instagram.
+- **Trip wish matches words, not meaning.** Qloo returns tags whose words are close to yours; places come from Qloo's tags on them. Mood tags (Cozy Cafe, Sunset Views) find no places through `filter.tags` in our tests, so for those the app scores the walk's places by the tag words — Qloo's own data tags some burger bars "Cafe", and they can show up.
 - The guide speaks English only. Street stories only exist for streets with an English Wikipedia article.
 - Guidance stops when the phone locks — a web app can't run in the background.
 - **A native app would fix two web limits:** it could hand the photo and caption straight to Instagram (no share menu), and keep guiding with the screen off. That is the planned next step.
