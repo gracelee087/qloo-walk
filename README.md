@@ -61,6 +61,18 @@ What the app sends to Qloo: place ids, a search text you typed, and a point roun
 
 ![For you walk](docs/for-you.png)
 
+## Why it's agentic
+
+It works as an agentic tool: once you start a walk, it decides and acts on its own, without being asked each time. It watches your GPS position, the time, the weather and your taps, and uses its tools (Qloo Insights, search and `find_tags`, OSRM walking routes, Wikipedia, Open-Meteo, ElevenLabs) to:
+
+- **decide what to say and when:** a passing place, local history, a food tip, a turn, a photo spot, or nothing (it waits for quiet stretches and stays silent in 🤫 mode);
+- **learn from your taps:** after every ○ Go it asks Qloo what people with that taste also like and offers the nearest one; the For you walk is ranked for your Go's, and ✕ Skips are remembered;
+- **add a place you saved to the walk by itself** when you walk within 300 m of it;
+- **re-plan the rest of the route** when you reach stops out of order or start somewhere else, and move on by itself when you walk past a stop without tapping;
+- **decide whether a place fits today:** a detour of 15 min or less joins the walk, a longer one is saved for later.
+
+The decisions are rules over Qloo's data, not a language model. The facts it tells you come from Qloo, Wikipedia or the weather, and each line says where; only the directions, short openers ("Fun fact!") and encouragement are written by the app.
+
 ## Everything else the guide does
 
 - **GPS walking like a local friend** (ported from my earlier Seoul guide, myeongdong-3d):
@@ -98,13 +110,23 @@ What the app sends to Qloo: place ids, a search text you typed, and a point roun
 
 ## What changed during the hackathon
 
-TasteWalk started from the code of my earlier project, myeongdong-3d, a Seoul walking guide whose last update was on 2026-08-01, before the submission period. That project had **no taste data at all**. Built during the submission period (Sep 30 – Oct 30, 2026):
+TasteWalk started from the code of my earlier project, myeongdong-3d, a Seoul walking guide whose last update was on 2026-08-01, before the submission period. That project read the same fixed tour to everyone and had **no taste data at all**.
+
+**During the submission period (Sep 30 – Oct 30, 2026) it became a product that actually talks with people and gives each walker a trip that fits their own taste.**
+
+Talking with people:
+
+- the guide talks to you the whole walk (ElevenLabs voice): the place you're passing, local history, food tips, turns, photo spots;
+- it listens back: you tap ○ Go or ✕ Skip at each stop, and every Go changes what it suggests next;
+- you can tell it what you feel like in the Trip tab ("cozy coffee", "cheap German food") and it answers with places near you (Qloo `find_tags`).
+
+A trip that fits your taste:
 
 - every place, walk and suggestion comes from Qloo (via the kit's `qloo api` CLI);
 - the Go/Skip → Qloo taste loop and the **For you** walk;
-- the move to Berlin and to GPS-first, voice-only guidance;
-- the photo-spot and Trip features;
-- a single Node server/container instead of serverless functions, as the kit requires.
+- places you want but that are too far are saved and added to the walk when you get near them.
+
+Also new: the move to Berlin and to GPS-first, voice-only guidance, and a single Node server/container instead of serverless functions, as the kit requires.
 
 ## Run it yourself
 
