@@ -7,7 +7,8 @@
 //   GET /api/qloo/course?lat=<lat>&lon=<lon>[&ids=<id,id>] -> Qloo places within COURSE_M to build walks from
 //                                               (with ids: ranked by taste affinity to those places — the "For you" walk)
 //   GET /api/story?street=<name>               -> the street's English Wikipedia summary, first sentences, read as is (no LLM)
-//   POST /api/tts {text}                       -> the guide's line as ElevenLabs speech (audio/mpeg); the key stays here
+//   GET /api/wiki/near?lat=<lat>&lon=<lon>     -> English Wikipedia articles within WIKI_M (local history), first sentences, read as is
+//   POST /api/tts {text}                     -> the guide's line as ElevenLabs speech (audio/mpeg); the key stays here
 // Run: node --env-file=.env server.mjs   (PORT, default 8888)
 import http from "node:http";
 import { readFile } from "node:fs/promises";
@@ -52,6 +53,7 @@ const place = (e) => ({
   kinds: (e.tags || []).filter((t) => /^urn:tag:(category|genre):place/.test(t.type || "")).map((t) => t.name),
   about: e.properties?.short_description || e.properties?.description || null,
   story: e.properties?.unique_selling_points || e.properties?.neighborhood_description || null,
+  area: e.properties?.neighborhood_description || null,
   keywords: (e.properties?.keywords || []).slice(0, 5).map((k) => k.name),
   image: e.properties?.image?.url ?? null,
   images: [...new Set([e.properties?.image?.url, ...(e.properties?.images || []).map((i) => i.url)].filter(Boolean))].slice(0, 5),
@@ -133,7 +135,7 @@ async function tts(text) {
   const r = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${VOICE}?output_format=mp3_44100_64`, {
     method: "POST", signal: AbortSignal.timeout(15000),
     headers: { "xi-api-key": process.env.ELEVENLABS_API_KEY, "content-type": "application/json", accept: "audio/mpeg" },
-    body: JSON.stringify({ text, model_id: TTS_MODEL, voice_settings: { stability: 0.5, similarity_boost: 0.8 } }),
+    body: JSON.stringify({ text, model_id: TTS_MODEL, voice_settings: { stability: 0.4, similarity_boost: 0.8, style: 0.5, use_speaker_boost: true } }),   // upbeat
   });
   if (!r.ok) throw new Error(`elevenlabs ${r.status}`);
   return Buffer.from(await r.arrayBuffer());
@@ -160,8 +162,31 @@ async function speech(req) {
   }
 }
 
+// ---------- local history: Wikipedia articles near a point (geosearch), first two sentences ----------
+const WIKI_M = 400;
+// stations aren't stories; accidents and crimes don't suit an upbeat walk
+const SKIP_WIKI = /U-Bahn|S-Bahn|station|disambiguation|^List of|crash|accident|shooting|murder|attack|bombing|stabbing/i;
+const nearWiki = new Map();      // ~100 m grid cell -> Promise of items
+const first2 = (t) => (t.match(/[^.!?]+[.!?]+(\s|$)/g) || [t]).slice(0, 2).join("").trim();
+async function wikiNear({ lat, lon }) {
+  const r = await fetch(`https://en.wikipedia.org/w/api.php?action=query&list=geosearch&gscoord=${lat}|${lon}&gsradius=${WIKI_M}&gslimit=12&format=json`,
+    { headers: UA, signal: AbortSignal.timeout(6000) });
+  const hits = ((await r.json()).query?.geosearch || []).filter((x) => !SKIP_WIKI.test(x.title)).slice(0, 8);
+  const items = await Promise.all(hits.map(async (x) => {
+    const s = await wikiSummary(x.title);
+    return s && { title: s.title, lat: x.lat, lon: x.lon, story: first2(s.extract), url: s.content_urls?.desktop?.page };
+  }));
+  return items.filter(Boolean);
+}
+
 async function api(req, u) {
   const [, , name, sub] = u.pathname.split("/");     // /api/<name>[/<sub>]
+  if (name === "wiki" && sub === "near" && req.method === "GET") {
+    const p = gridPoint(u), key = `${p.lat},${p.lon}`;
+    if (!inArea({ location: p })) return Response.json({ error: "outside the walking area" }, { status: 400 });
+    if (!nearWiki.has(key)) nearWiki.set(key, wikiNear(p).catch(() => { nearWiki.delete(key); return []; }));
+    return Response.json({ items: await nearWiki.get(key), source: "English Wikipedia (CC BY-SA 4.0)" });
+  }
   if (name === "tts" && req.method === "POST") return speech(req);
   if (name === "story" && req.method === "GET") {
     const street = (u.searchParams.get("street") || "").trim().slice(0, 80);

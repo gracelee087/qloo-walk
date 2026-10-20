@@ -30,6 +30,7 @@ const COURSES = [
 const state = {
   pois: [], sel: null, peek: null, lastLine: "",
   trip: loadTrip(), heading: null, wx: null, fix: null, posGood: true, photoSpot: null, postEdited: false,
+  quiet: (() => { try { return localStorage.getItem("tw-quiet") === "1"; } catch { return false; } })(), lastTalkAt: 0,
   course: null, stops: [], path: [], cum: [], len: 0,
   i: 0, dist: 0, pos: null, atStop: false,
   mode: "sim", running: false, paused: false, gpsWatch: null,
@@ -262,7 +263,7 @@ const WELCOME = "Hi, and welcome to TasteWalk Berlin! I'm your local companion f
   "or For you, a walk Qloo builds from the places you love. On the way, just tap Go when a place feels right, " +
   "and I'll keep finding new experiences for you. Ready? Tap Start Walk. Let's go!";
 function say(text, source, actions) {
-  state.lastLine = text; el("prevBtn").disabled = false;
+  state.lastLine = text; el("prevBtn").disabled = false; state.lastTalkAt = Date.now();
   addMsg("buddy", text, actions, source);
   playNarration(text);
 }
@@ -654,7 +655,7 @@ function photoSpot(near) {
 const told = new Set();
 let lastStoryAt = 0, lastTipAt = 0, lastPhotoAt = 0, aroundBusy = false;
 async function checkAround() {
-  if (!state.running || state.atStop || state.paused || aroundBusy || !state.pos || isPlaying()) return;
+  if (!state.running || state.atStop || state.paused || state.quiet || aroundBusy || !state.pos || isPlaying()) return;
   aroundBusy = true;
   try {
     if (state.mode === "sim" && state.path.length) nearbyPlaces(pointAlong(state.path, state.cum, state.dist + 200).pos);   // fetch ahead
@@ -678,20 +679,87 @@ async function checkAround() {
       told.add(tip.q.id); lastTipAt = lastStoryAt = now;
       return say(tip.text, QLOO_SRC, { label: "⭐ Later", run: () => { saveToTrip(qPlace(tip.q)); toast(`⭐ Saved ${tip.q.name}`); } });
     }
-    const pass = now - lastStoryAt > STORY_GAP_MS && near.find((x) => x.d < PASS_M && (x.q.story || x.q.about));
+    // passing places worth a word — not everyday shops (a discount store is no story)
+    const pass = now - lastStoryAt > STORY_GAP_MS && near.find((x) => x.d < PASS_M && (x.q.story || x.q.about) && qPlace(x.q).type !== "shopping");
     if (pass) {
       told.add(pass.q.id); lastStoryAt = now;
       const side = sideOf(pass.q.lon, pass.q.lat);
-      say(`${side ? `On your ${side}, ` : "Right here, "}${pass.q.name}. ${sentences(pass.q.story || pass.q.about, 2)}`, QLOO_SRC);
+      return say(`${side ? `On your ${side}, ` : "Right here, "}${pass.q.name}. ${sentences(pass.q.story || pass.q.about, 2)}`, QLOO_SRC);
     }
+    if (now - state.lastTalkAt > FILL_GAP_MS) await fillQuiet(here, near);
   } finally { aroundBusy = false; }
+}
+
+// ---------- quiet stretches: the kind of thing only a local would tell you ----------
+// In turn: the next stop, a bit of local history (Wikipedia articles right here), a place to eat
+// and the feel of the area (both Qloo). The facts are read as they are; only the opener is ours.
+const FILL_GAP_MS = 25000, FOOD_M = 250, AREA_GAP_MS = 240000;
+const OPENERS = {
+  history: ["Fun fact!", "Here's one you won't find in the guidebook:", "A little Berlin history for you:"],
+  food: ["Foodie alert!", "Getting hungry?", "Snack idea!"],
+  next: ["Next up —", "Get ready —", "Almost there —"],
+  area: ["Look around you!", "Quick vibe check:"],
+};
+let fillN = 0, teased = -1, lastAreaAt = 0;
+const opener = (kind) => OPENERS[kind][fillN % OPENERS[kind].length];
+const toldWiki = new Set(), toldAreas = new Set(), wikiCache = new Map();
+function wikiNear([lng, lat]) {
+  const key = `${lat.toFixed(3)},${lng.toFixed(3)}`;
+  if (!wikiCache.has(key)) wikiCache.set(key, qget(`/api/wiki/near?lat=${lat.toFixed(3)}&lon=${lng.toFixed(3)}`).then((j) => j.items)
+    .catch(() => { wikiCache.delete(key); return []; }));
+  return wikiCache.get(key);
+}
+async function fillLine(kind, here, near) {
+  const on = (lng, lat) => { const s = sideOf(lng, lat); return s ? ` on your ${s}` : ""; };
+  if (kind === "next") {
+    const p = current();
+    if (!p || teased === state.i) return null;
+    teased = state.i;
+    const d = metersBetween(here, [p.lng, p.lat], p.lat);
+    if (d < 120) return null;
+    return { text: `${opener(kind)} ${nameOf(p)}, about ${fmtDist(d)} from here.${p.about ? " " + sentences(p.about, 1) : ""}`, source: p.q ? QLOO_SRC : undefined };
+  }
+  if (kind === "history") {
+    // articles about one of our stops count as 200 m farther: the stop gets its own introduction,
+    // so the things you'd never hear otherwise come first
+    const atStopSite = (x) => state.stops.some((s) => metersBetween([s.lng, s.lat], [x.lon, x.lat], x.lat) < 60);
+    const w = (await wikiNear(here)).filter((x) => !toldWiki.has(x.title))
+      .map((x) => ({ x, d: metersBetween(here, [x.lon, x.lat], x.lat) })).filter((c) => c.d < 300)
+      .sort((a, b) => a.d + (atStopSite(a.x) ? 200 : 0) - b.d - (atStopSite(b.x) ? 200 : 0))[0];
+    if (!w) return null;
+    toldWiki.add(w.x.title);
+    return { text: `${opener(kind)} ${w.x.story}`, source: { label: `From Wikipedia — ${w.x.title}`, url: w.x.url } };
+  }
+  if (kind === "food") {
+    const f = near.find(({ q, d }) => d < FOOD_M && q.about && (q.popularity ?? 0) >= 0.9 && qPlace(q).type === "food");
+    if (!f) return null;
+    told.add(f.q.id);
+    const place = qPlace(f.q);
+    return { text: `${opener(kind)} ${f.q.name} is ${fmtDist(f.d)} away${on(f.q.lon, f.q.lat)}. ${sentences(f.q.about, 1)}`, source: QLOO_SRC,
+      actions: [{ label: "＋ Add to the walk", run: () => handleWant(place) },
+        { label: "⭐ Later", run: () => { saveToTrip(place); toast(`⭐ Saved ${f.q.name}`); } }] };
+  }
+  const a = Date.now() - lastAreaAt > AREA_GAP_MS && near.find(({ q }) => q.area && !toldAreas.has(q.area));
+  if (!a) return null;
+  toldAreas.add(a.q.area); lastAreaAt = Date.now();
+  return { text: `${opener(kind)} ${sentences(a.q.area, 1)}`, source: QLOO_SRC };
+}
+async function fillQuiet(here, near) {
+  const kinds = ["next", "history", "food", "area"];
+  for (let k = 0; k < kinds.length; k++) {
+    const line = await fillLine(kinds[(fillN + k) % kinds.length], here, near);
+    if (!line) continue;
+    if (!state.running || state.atStop || state.quiet || isPlaying()) return;
+    fillN += k + 1;
+    return say(line.text, line.source, line.actions);
+  }
 }
 
 // ---------- street stories: the street you just turned into, from English Wikipedia (read as is) ----------
 const toldStreets = new Set();
-let lastStreet = null, streetBusy = false, lastStreetTalk = 0;
+let lastStreet = null, streetBusy = false;
 async function checkStreet() {
-  if (!state.running || state.atStop || state.paused || streetBusy || !state.pos || isPlaying()) return;
+  if (!state.running || state.atStop || state.paused || state.quiet || streetBusy || !state.pos || isPlaying()) return;
   if (state.mode === "gps" && !state.posGood) return;
   const street = streetAt(state.pos[0], state.pos[1]);
   if (!street || street === lastStreet) return;
@@ -703,13 +771,8 @@ async function checkStreet() {
     const j = await qget(`/api/story?street=${encodeURIComponent(street)}`);
     if (!state.running || state.atStop) return;
     await waitQuiet();
-    if (j.story) {
-      lastStreetTalk = Date.now();
-      say(`Now on ${street}. ${j.story}`, { label: `From Wikipedia — ${j.source.title}`, url: j.source.url });
-    } else if (Date.now() - lastStreetTalk > 60000) {     // no article: just the name, now and then
-      lastStreetTalk = Date.now();
-      say(`Now on ${street}.`);
-    }
+    // no article → say nothing: a bare street name isn't worth interrupting for
+    if (j.story) say(`Now on ${street}. ${j.story}`, { label: `From Wikipedia — ${j.source.title}`, url: j.source.url });
   } catch { /* no story this time */ } finally { streetBusy = false; }
 }
 
@@ -727,16 +790,6 @@ function turnAt(i) {
   const p = state.path, d = angDiff(segBearing(p[i - 1], p[i]), segBearing(p[i], p[i + 1]));
   return Math.abs(d) < 38 ? null : { i, dir: d > 0 ? "right" : "left" };
 }
-// demo walk: the next sharp corner within 26 m ahead
-function upcomingTurn() {
-  for (let i = 1; i < state.path.length - 1; i++) {
-    if (state.cum[i] <= state.dist) continue;
-    if (state.cum[i] - state.dist > 26) return null;
-    const t = turnAt(i);
-    if (t) return t;
-  }
-  return null;
-}
 // GPS: the nearest corner within 28 m of the real position
 function gpsUpcomingTurn(a) {
   let bi = -1, bd = 28;
@@ -747,13 +800,23 @@ function gpsUpcomingTurn(a) {
   return bi < 1 ? null : turnAt(bi);
 }
 const distToRoute = (a) => state.path.reduce((m, p) => Math.min(m, metersBetween(a, p, a[1])), Infinity);
-let turnIdx = -1, offRoute = false, lastNavTalk = 0, lastPing = Date.now();
+// the street a corner leads into — only worth saying when it's a different street
+function turnInto(i) {
+  const p = state.path, before = streetAt(...p[i - 1]), after = streetAt(...p[i + 1]);
+  return after && after !== before ? after : null;
+}
+const TURN_LINES = [(d, s) => `Turn ${d} here, onto ${s}.`, (d, s) => `We're taking a ${d} onto ${s}.`, (d, s) => `${d[0].toUpperCase() + d.slice(1)} here — into ${s}.`];
+let turnIdx = -1, turnN = 0, lastTurnTalk = 0, offRoute = false, lastNavTalk = 0, lastPing = Date.now();
 function navTick() {
   if (!state.running || state.paused || state.atStop || !state.pos || isPlaying() || !state.path.length) return;
-  if (state.mode === "gps" && !state.posGood) return;
-  const turn = state.mode === "gps" ? gpsUpcomingTurn(state.pos) : upcomingTurn();
-  if (turn && turn.i !== turnIdx) { turnIdx = turn.i; playNarration(`Coming up — turn ${turn.dir}.`); return; }
-  if (state.mode !== "gps") return;
+  // demo walk: no turn talk — the yellow line shows the way
+  if (state.mode !== "gps" || !state.posGood) return;
+  const turn = gpsUpcomingTurn(state.pos), into = turn && turn.i !== turnIdx && turnInto(turn.i);
+  if (turn) turnIdx = turn.i;
+  if (into && !state.quiet && Date.now() - lastTurnTalk > 30000) {
+    lastTurnTalk = Date.now();
+    return say(TURN_LINES[turnN++ % TURN_LINES.length](turn.dir, into));
+  }
   const next = current(), now = Date.now(), d = distToRoute(state.pos);
   const ahead = next ? ` ${nameOf(next)} is about ${fmtDist(metersBetween(state.pos, [next.lng, next.lat], next.lat))} away.` : "";
   if (d > 45 && !offRoute && now - lastNavTalk > 25000) {
@@ -762,7 +825,7 @@ function navTick() {
   } else if (d < 28 && offRoute) {
     offRoute = false; lastNavTalk = now; toast("✅ Back on the route");
     say(`Nice — you're back on the route.${ahead}`);
-  } else if (!offRoute && next && now - lastPing > 90000 && now - lastNavTalk > 30000) {
+  } else if (!offRoute && !state.quiet && next && now - lastPing > 90000 && now - lastNavTalk > 30000) {
     lastPing = lastNavTalk = now;
     say(`You're doing great.${ahead}`);
   }
@@ -968,6 +1031,15 @@ function wire() {
   el("noBtn").addEventListener("click", () => judge(shown(), false));
   el("camBtn").addEventListener("click", snapPhoto);
   el("snapBtn").addEventListener("click", snapPhoto);
+  // 🤫 AI silence: nothing between stops — the guide only talks when you arrive (and if you go off the route)
+  const quietLabel = () => { el("quietBtn").textContent = state.quiet ? "🤫 Quiet" : "🔊"; el("quietBtn").classList.toggle("on", state.quiet); };
+  quietLabel();
+  el("quietBtn").addEventListener("click", () => {
+    state.quiet = !state.quiet; quietLabel();
+    try { localStorage.setItem("tw-quiet", state.quiet ? "1" : "0"); } catch { /* private mode */ }
+    if (state.quiet) { audioStop(); toast("🤫 AI silence — I'll only talk when we reach a stop"); }
+    else toast("🔊 I'm back — stories, food tips and local history on the way!");
+  });
   el("camInput").addEventListener("change", onPhoto);
   el("startBtn").addEventListener("click", () => (state.running ? endWalk() : startWalk()));
   el("pauseBtn").addEventListener("click", () => {

@@ -73,6 +73,15 @@ What the app sends to Qloo: place ids, a search text you typed, and a point roun
   - jumpy fixes (accuracy worse than 50 m) are ignored;
   - the screen stays on during a walk (Wake Lock).
 - **Street stories:** the street you're on is read from the map tiles, and the guide reads the first two sentences of its English Wikipedia article, word for word (no LLM).
+- **No dead air, no "coming up" spam:**
+  - Turn hints only play with GPS, and only when the street actually changes ("Turn left here, onto Rathausstraße").
+  - If the guide has been quiet for 25 s, it fills the gap in turn with:
+    - the next stop;
+    - **local history**: English Wikipedia articles geotagged right where you are, e.g. "1760 raid on Berlin" or "Nathan Israel Department Store";
+    - a **place to eat** nearby (Qloo);
+    - the **feel of the area** (Qloo's neighbourhood description).
+  - The facts are read as they are; only the cheerful opener ("Fun fact!", "Foodie alert!") is ours.
+- **🤫 AI silence:** one tap and the guide only talks when you reach a stop (and if you wander off the route).
 - **Photo spots:** a Qloo place within 120 m that has a photo tag (Photography, Scenic, Viewing platform, …) and Qloo popularity of at least 0.9 triggers "Photo spot!".
   The 📷 button opens a post sheet with Title, Content and Tags filled in from Qloo. "Post to Instagram" uses the phone's share sheet and copies the caption. The photo never leaves your phone.
 - **Trip list:** search a place → if the detour is 15 min or less it is added to today's walk, otherwise it's saved. Within 300 m of a saved place a pop-up asks: *Add it to this walk now?* — you choose.
