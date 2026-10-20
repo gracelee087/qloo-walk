@@ -3,7 +3,7 @@
 **A voice-only GPS walking guide that learns your taste as you walk — powered by the Qloo Taste AI API.**
 Built for the [Qloo Agentic Hackathon](https://qloo.devpost.com/).
 
-**Live demo:** _(link added after deployment)_ · **License:** MIT
+**Live demo:** https://tastewalk.onrender.com · **License:** MIT
 
 ![The card of the first stop, with the walk drawn on the map](docs/card.png)
 
@@ -116,7 +116,7 @@ Tap **Demo** to walk a simulated route from Alexanderplatz, or **GPS** to walk f
 ## Known limitations — what this does not establish
 
 - **Affinity is not a personal prediction.** It is aggregate taste data from Qloo. With one or two Go's the For you walk mostly reflects the area plus those places; we have not measured whether it matches what a given walker enjoys.
-- **Speed:** each uncached Qloo call is a CLI process that took 5–8 s on a laptop. Results are cached in the server's memory only (Qloo data is never stored on disk or in this repo). If Qloo doesn't answer, walks fall back to OpenStreetMap places, and the app says so.
+- **Speed:** each uncached Qloo call is a CLI process. On the live server (Render, 0.5 CPU) we measured 4–6 s for one call and 12–14 s each when three run at once. Cached calls take under 0.1 s. Results are cached in the server's memory only (Qloo data is never stored on disk or in this repo). If Qloo doesn't answer, walks fall back to OpenStreetMap places, and the app says so.
 - **Place kinds come from Qloo's tags.** Some places land in a surprising walk (e.g. a bar tagged "Tourist attraction" in Must See).
 - **Instagram:** reels inside the card would need an Instagram Business account, a Meta app and approval for the *Instagram Public Content Access* feature (Hashtag Search: max 30 hashtags per 7 days). That is not part of this submission. The card's last slide links to the place's public hashtag page instead (no API, no account, nothing sent from our side).
 - **Tested** with a headless browser and GPS emulation:
