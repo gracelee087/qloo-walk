@@ -2,7 +2,6 @@
 .env.*
 .git
 .netlify
-.netlify-publish
 node_modules
 data/qloo-cache
 shots

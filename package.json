@@ -5,16 +5,11 @@
   "type": "module",
   "description": "TasteWalk — GPS walking audio guide that learns your taste (Qloo Agentic Hackathon)",
   "scripts": {
-    "dev": "netlify dev",
-    "start": "netlify dev",
+    "start": "node server.mjs",
     "serve": "node --env-file=.env server.mjs",
     "refresh-data": "node scripts/fetch-area.mjs"
   },
-  "devDependencies": {
-    "netlify-cli": "^17.0.0"
-  },
   "dependencies": {
-    "puppeteer-core": "^23.11.1",
-    "sharp": "^0.35.3"
+    "puppeteer-core": "^23.11.1"
   }
 }

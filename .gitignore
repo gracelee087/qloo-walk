@@ -21,7 +21,6 @@ _shot.mjs
 Thumbs.db
 scratchpad_*
 
-.netlify-publish/
 shots/
 
 # Qloo responses must not be published (Qloo hackathon guide FAQ)
