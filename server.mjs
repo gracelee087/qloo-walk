@@ -157,7 +157,7 @@ async function streetStory(street) {
   return { story: null };
 }
 
-// ---------- the guide's voice: ElevenLabs (voice "Amelia", as in Myeongdong 3D) ----------
+// ---------- the guide's voice: ElevenLabs (voice "Amelia") ----------
 // The demo is public, so a daily character budget caps what strangers can spend;
 // over budget (or no key) the app falls back to the browser's own voice.
 const VOICE = "ZF6FPAbjXT4488VcRRnw", TTS_MODEL = "eleven_v4_turbo";

@@ -1,5 +1,5 @@
 // Our own map look, drawn from OpenFreeMap vector tiles (OpenMapTiles schema).
-// Two palettes — "night" (the Myeongdong 3D mood) and "day" — picked from
+// Two palettes — "night" and "day" — picked from
 // Berlin's real time. Street labels show the real street name (OSM `name`).
 const PALETTE = {
   night: {

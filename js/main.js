@@ -10,7 +10,7 @@ import { consent, setConsent, track, deleteMyData } from "./insights.js";
 const el = (id) => document.getElementById(id);
 const WALK_SPEED = 12;          // m/s — the demo walk is sped up
 const ARRIVE_M = 35;            // "you're at the stop"
-const OTHER_STOP_M = 40;        // GPS: this close to a later stop → take it now (Myeongdong 3D's POI_TRIGGER)
+const OTHER_STOP_M = 40;        // GPS: this close to a later stop → take it now
 const GOOD_FIX_M = 50;          // GPS fixes less accurate than this don't trigger arrivals or route warnings
 const LEAVE_M = 60;             // GPS: walked this far from a stop without tapping Go/Skip → on to the next one
 const WALK_M_PER_MIN = 75;      // ~4.5 km/h, for time estimates when routing is down
@@ -201,7 +201,7 @@ async function startWalk() {
   prime();                      // still inside the tap, so iOS lets the guide speak later
   keepAwake(true);
   if (state.mode === "gps") {
-    // like Myeongdong 3D: in GPS mode the walk starts from where you are
+    // in GPS mode the walk starts from where you are
     el("startBtn").disabled = true;
     startGPS();
     const at = await firstFix(12000);
@@ -400,7 +400,7 @@ function advance() {
   showStop();
 }
 
-// ---------- the guide: a voice that walks with you (no chat, like Myeongdong 3D) ----------
+// ---------- the guide: a voice that walks with you (no chat) ----------
 // What it says comes from the route, the live weather and Qloo place data —
 // no language model writes anything. Every line is also logged in the Guide tab.
 const TOO_FAR_S = 15 * 60;      // a detour longer than this goes to My Trip instead
@@ -813,7 +813,7 @@ async function checkStreet() {
   } catch { /* no story this time */ } finally { streetBusy = false; }
 }
 
-// ---------- navigation voice: turns, off-route, progress (from Myeongdong 3D) ----------
+// ---------- navigation voice: turns, off-route, progress ----------
 const angDiff = (a, b) => ((b - a + 540) % 360) - 180;
 // "left"/"right" for a point beside the walker; "" when it's ahead or behind
 function sideOf(lng, lat) {
@@ -942,7 +942,7 @@ function stopGPS() {
   if (state.gpsWatch != null) navigator.geolocation.clearWatch(state.gpsWatch);
   state.gpsWatch = null;
 }
-// GPS: you reached a later stop first (like Myeongdong 3D) → take it now, re-plan the rest from here
+// GPS: you reached a later stop first → take it now, re-plan the rest from here
 function checkOtherStops() {
   if (state.atStop) return;
   const k = state.stops.findIndex((s, j) => j > state.i && metersBetween(state.pos, [s.lng, s.lat], s.lat) < OTHER_STOP_M);

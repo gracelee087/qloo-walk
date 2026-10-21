@@ -1,4 +1,4 @@
-/* TasteWalk — dark glass panels over our own map (the Myeongdong 3D look).
+/* TasteWalk — dark glass panels over our own map.
    The panels stay dark day and night; only the map palette follows Berlin's clock. */
 :root {
   --glass: rgba(16, 21, 36, 0.82);

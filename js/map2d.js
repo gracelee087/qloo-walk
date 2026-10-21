@@ -1,6 +1,6 @@
 // The map: our own flat, tilted map (MapLibre + OpenFreeMap tiles, styled in
 // mapstyle.js), a glowing route, numbered stops — and the walker as a little
-// 3D person (three.js, ported from Myeongdong 3D's avatar). Buildings stay flat.
+// 3D person (three.js). Buildings stay flat.
 import * as maplibregl from "maplibre-gl";
 import * as THREE from "three";
 import { buildStyle, applyTheme } from "./mapstyle.js";
@@ -183,7 +183,7 @@ function avatarLayer() {
         .multiply(new THREE.Matrix4().makeRotationY(Math.PI - (S.me.heading * Math.PI) / 180));
       camera.projectionMatrix = new THREE.Matrix4().fromArray(args.defaultProjectionData.mainMatrix).multiply(model);
       renderer.resetState();
-      renderer.clearDepth();      // walker shows through buildings (Myeongdong 3D's x-ray), still depth-sorted within itself
+      renderer.clearDepth();      // walker shows through buildings (x-ray), still depth-sorted within itself
       renderer.render(scene, camera);
       S.map.triggerRepaint();
     },
