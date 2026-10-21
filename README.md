@@ -3,7 +3,7 @@
 **A voice-only GPS walking guide that learns your taste as you walk — powered by the Qloo Taste AI API.**
 Built for the [Qloo Agentic Hackathon](https://qloo.devpost.com/).
 
-**Live demo:** https://tastewalk.onrender.com · **License:** MIT
+**Live demo:** https://tastewalk.onrender.com · **Demo video:** https://youtu.be/ii_X-_oaInQ · **License:** MIT
 
 ![The card of the first stop, with the walk drawn on the map](docs/card.png)
 
